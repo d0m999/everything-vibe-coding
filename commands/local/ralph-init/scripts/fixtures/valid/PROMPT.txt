@@ -1,0 +1,26 @@
+# Ralph PROMPT (valid fixture)
+
+Step 0: read `.ralph/current_story.json` to find the locked story id.
+Step 1: read `.ralph/progress.txt` and focus on `## Codebase Patterns`.
+Step 2: read `.ralph/prd.json` and load only the locked story.
+
+Shell example using a real variable: `echo ${current_story_id}` — this is a bash
+variable, not a template placeholder. It must not trip the template check.
+
+When done:
+- emit `<promise>YIELD</promise>` to hand back, or
+- emit `<promise>COMPLETE</promise>` when the whole PRD is done.
+
+## Completion integrity
+
+The `<promise>COMPLETE</promise>` statement MUST be completely and unequivocally
+true. Do not output a false promise to exit the loop. Do not lie even if you
+think you are stuck, the task is impossible, or the loop has run too long.
+
+If progress is blocked:
+- write the concrete blocker into `.ralph/progress.txt`
+- emit `<promise>YIELD</promise>` instead
+
+The harness cross-validates `<promise>COMPLETE</promise>` against the real
+`prd.json` state — a premature COMPLETE will be caught and the loop will keep
+going, wasting your iterations. Trust the process.

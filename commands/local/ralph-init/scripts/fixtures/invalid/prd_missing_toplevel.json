@@ -1,0 +1,22 @@
+{
+  "project": "demo",
+  "branchName": "feat/demo",
+  "description": "missing designDocs top-level key",
+  "userStories": [
+    {
+      "id": "DEMO-01",
+      "title": "x",
+      "description": "x",
+      "planSection": "§1",
+      "designDocRef": "docs/plan.md",
+      "storyType": "code",
+      "entryCount": 0,
+      "modifies": ["src/a.ts", "src/a.test.ts"],
+      "creates": [],
+      "acceptanceCriteria": ["ok"],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}

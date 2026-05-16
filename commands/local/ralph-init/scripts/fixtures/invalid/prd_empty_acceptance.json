@@ -1,0 +1,23 @@
+{
+  "project": "demo",
+  "branchName": "feat/demo",
+  "description": "acceptanceCriteria must be non-empty",
+  "designDocs": ["docs/plan.md"],
+  "userStories": [
+    {
+      "id": "DEMO-01",
+      "title": "a",
+      "description": "a",
+      "planSection": "§1",
+      "designDocRef": "docs/plan.md",
+      "storyType": "code",
+      "entryCount": 0,
+      "modifies": ["src/a.ts", "src/a.test.ts"],
+      "creates": [],
+      "acceptanceCriteria": [],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}

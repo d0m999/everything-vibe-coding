@@ -1,0 +1,9 @@
+# Bad prompt with a real template variable
+
+Step 0: read {story} and apply {pattern}.
+
+.ralph/current_story.json
+.ralph/progress.txt
+.ralph/prd.json
+<promise>YIELD</promise>
+<promise>COMPLETE</promise>
