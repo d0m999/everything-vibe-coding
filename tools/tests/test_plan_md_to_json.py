@@ -783,6 +783,14 @@ def _make_meta_md(*, include_plan: bool = True, include_lang: bool = True,
 |---|---|---|---|
 | 1 | foo | impl | chain |
 
+## Parallel execution graph
+
+| Wave | Steps | Notes |
+|---|---|---|
+| 1 | step-1 | no deps |
+
+**Dependency sources**:
+
 ---
 
 ## Step 1 — foo
