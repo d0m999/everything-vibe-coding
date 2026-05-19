@@ -14,13 +14,13 @@ from __future__ import annotations
 import json
 import re
 from pathlib import Path
-from typing import TypedDict
+from typing import Any, TypedDict
 
 # ---------------------------------------------------------------------------
 # Shared constant — single source of truth is HANDOFF.schema.json
 # ---------------------------------------------------------------------------
 _SCHEMA_PATH = Path(__file__).with_name("HANDOFF.schema.json")
-_schema_data: dict = json.loads(_SCHEMA_PATH.read_text(encoding="utf-8"))
+_schema_data: dict[str, Any] = json.loads(_SCHEMA_PATH.read_text(encoding="utf-8"))
 MISSING_HANDOFF_PLACEHOLDER: str = _schema_data["_constants"]["MISSING_HANDOFF_PLACEHOLDER"]
 
 
