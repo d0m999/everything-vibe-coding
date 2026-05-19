@@ -1,4 +1,3 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from agents/tdd-guide.md -->
 ---
 name: tdd-guide
 description: Test-Driven Development specialist enforcing write-tests-first methodology. Use PROACTIVELY when writing new features, fixing bugs, or refactoring code. Ensures 80%+ test coverage.

@@ -1,4 +1,3 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from agents/database-reviewer.md -->
 ---
 name: database-reviewer
 description: PostgreSQL database specialist for query optimization, schema design, security, and performance. Use PROACTIVELY when writing SQL, creating migrations, designing schemas, or troubleshooting database performance. Incorporates Supabase best practices.

@@ -1,4 +1,3 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from agents/type-design-analyzer.md -->
 ---
 name: type-design-analyzer
 description: Analyze type design for encapsulation, invariant expression, usefulness, and enforcement.

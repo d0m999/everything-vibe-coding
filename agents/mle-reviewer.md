@@ -1,4 +1,3 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from agents/mle-reviewer.md -->
 ---
 name: mle-reviewer
 description: Production machine-learning engineering reviewer for data contracts, feature pipelines, training reproducibility, offline/online evaluation, model serving, monitoring, and rollback. Use when ML, MLOps, model training, inference, feature store, or evaluation code changes.

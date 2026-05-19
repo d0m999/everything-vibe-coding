@@ -1,4 +1,3 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from agents/rust-reviewer.md -->
 ---
 name: rust-reviewer
 description: Expert Rust code reviewer specializing in ownership, lifetimes, error handling, unsafe usage, and idiomatic patterns. Use for all Rust code changes. MUST BE USED for Rust projects.

@@ -1,4 +1,3 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from agents/harness-optimizer.md -->
 ---
 name: harness-optimizer
 description: Analyze and improve the local agent harness configuration for reliability, cost, and throughput.

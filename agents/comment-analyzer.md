@@ -1,4 +1,3 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from agents/comment-analyzer.md -->
 ---
 name: comment-analyzer
 description: Analyze code comments for accuracy, completeness, maintainability, and comment rot risk.

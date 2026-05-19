@@ -1,4 +1,3 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from agents/loop-operator.md -->
 ---
 name: loop-operator
 description: Operate autonomous agent loops, monitor progress, and intervene safely when loops stall.

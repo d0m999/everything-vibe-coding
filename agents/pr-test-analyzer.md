@@ -1,4 +1,3 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from agents/pr-test-analyzer.md -->
 ---
 name: pr-test-analyzer
 description: Review pull request test coverage quality and completeness, with emphasis on behavioral coverage and real bug prevention.
