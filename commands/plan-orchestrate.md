@@ -1,6 +1,7 @@
 <!-- Local fork: 2026-05-16 — adapted for bare-vendored install (no plugin namespace). Source: ~/.claude/commands/plan-orchestrate.md (user original, 328 lines). Changes: dropped ECC_MODE detection (Phase 0), extended py_sub to {mle,django,fastapi,generic}, replaced catalogue with v1 keep agents, added debug tag, removed e2e-runner from test chain (E2E → gstack /qa). See README appendix A-H. -->
+<!-- 2026-05-17: added Phase 4 "Build parallel-execution DAG" + Mermaid graph + waves table in output; renumbered original Phase 4/5 → 5/6; added "Plan dependency syntax" section. -->
 ---
-description: Read a plan document, decompose it into steps, design a per-step agent chain from the bare-vendored catalogue, and emit ready-to-paste Agent tool invocation blocks. Generative only — never invokes the Agent tool itself; output is for the user (or a downstream session) to execute. Use when the user has a multi-step plan and wants to drive it through sequenced Agent calls without composing chains by hand.
+description: Read a plan document, decompose it into steps, design a per-step agent chain from the bare-vendored catalogue, emit ready-to-paste Agent tool invocation blocks, and produce a parallel-execution Mermaid graph + waves table showing which steps can run concurrently across separate Claude sessions. Generative only — never invokes the Agent tool itself; output is for the user (or a downstream session) to execute. Use when the user has a multi-step plan and wants to drive it through sequenced Agent calls without composing chains by hand.
 ---
 
 # Plan Orchestrate
@@ -27,6 +28,21 @@ Skip when:
 - `--lang` — reviewer language variant; defaults to `auto` (detected from project).
 - `--scope` — limits emitted steps; defaults to `all`.
 - `--dry-run` — print decomposition + chain rationale only; do not emit final prompts.
+
+A **parallel-execution graph** (Mermaid `flowchart TD` + waves table) is always emitted after the overview table — see Phase 4 (build) and Phase 5 (render). It identifies which steps can be launched concurrently in separate Claude sessions. Even under `--dry-run` the graph is included.
+
+## Plan dependency syntax (optional)
+
+Plan authors can declare step-to-step dependencies anywhere inside a step's body; this skill parses them to build the parallel-execution DAG. Declarations are case-insensitive; both English and Chinese forms are recognized.
+
+| Intent | Recognized forms |
+|---|---|
+| Blocking dependency | `depends on: step-N` / `depends on step N` / `requires step N` / `after step N` / `blocked by step N` / `在 step N 之后` / `依赖 step N` |
+| Multiple upstream deps | Comma- or `+`-separated list, e.g. `depends on: step-2, step-3` or `requires step-2 + step-4` |
+| Explicit independence | `independent` / `parallel ok` / `no dependencies` / `独立` / `可并行` |
+| Pairwise parallel hint | `can run in parallel with step N` / `与 step N 并行` (informational; same effect as both steps being independent of each other) |
+
+Declarations beat heuristics: an explicit `independent` clears any heuristic edges the skill would otherwise add to that step. If declarations form a cycle, the skill emits the graph with the cycle flagged and asks the user to resolve it in the plan.
 
 ## Authoritative emission shape (do not deviate)
 
@@ -179,7 +195,25 @@ Each emitted `<task description>` must:
 - Include a Scope guard (`Out of scope: ...`) **only if the plan declares one for this step**. Inherit verbatim. If the plan has no out-of-scope statement, omit the clause entirely — do not invent one.
 - Be 200–600 characters; one line; embedded `"` escaped as `\"`; no literal newlines.
 
-### Phase 4 — Output
+### Phase 4 — Build parallel-execution DAG
+
+For each step, compute its dependency set `deps` (the set of upstream steps that must finish before this step starts). Run in this order:
+
+1. **Explicit declarations win.** Parse every form listed in "Plan dependency syntax". An `independent` declaration clears all heuristic edges that would otherwise be added to that step. Record the matched phrase verbatim (used later as the `explicit:<phrase>` annotation).
+2. **Heuristic edges** (only added when no explicit declaration covers the same edge):
+   - `design` / `plan` tag → depends on the nearest earlier `design`/`plan` step, or none if it is the first such step.
+   - `db` schema change → no upstream dep by default; downstream `impl` / `migration` / `test` steps that mention the same entity (table name, model name, schema name) in their title or intent gain an edge to it.
+   - `impl` / `refactor` / `migration` → if `--lang` is detected and a same-area cue is present (shared file path, shared module, or shared entity name with an earlier `impl`/`refactor`/`migration` step), inherit that edge; otherwise no heuristic upstream dep.
+   - `test` tag whose title/intent references another step's subject → depends on that step. If no reference, no heuristic dep.
+   - `build` tag → depends on every preceding `impl` / `refactor` / `migration` step in scope.
+   - `docs` tag → depends on every preceding non-`docs` step (docs are written last).
+   - `security` review-style step (no `impl` of its own) → depends on every preceding step it audits, identified by shared entity mentions.
+3. **Conservative fallback**: a step with **neither explicit nor heuristic deps** stays at `deps = ∅` (independent). Do **not** auto-chain to the previous step — that would defeat the graph. If the author wants strict order, they should add `depends on: step-N`.
+4. **Transitive reduction**: drop edges that are implied by a longer path (e.g. if `step-3 → step-1` and `step-3 → step-2` and `step-2 → step-1`, drop the `3→1` Mermaid edge for clarity). The underlying `deps` set is preserved internally; only the rendered graph is reduced.
+5. **Cycle detection**: run a topo sort. If a cycle is found, emit the graph with the offending edges labelled `⚠️ cycle`, list cycle members under the graph, compute waves on the acyclic subset only, and tag the cycle members as `unscheduled` in the waves table.
+6. **Waves (Kahn's algorithm)**: `Wave 1` = all steps with `deps = ∅`. Remove them, recompute, `Wave 2` = newly-zero-in-degree steps. Repeat until every (acyclic) step is assigned. Steps in the same wave can be launched concurrently in separate Claude sessions; the next wave starts only after the current wave finishes.
+
+### Phase 5 — Output
 
 Emit Markdown using **bare agent names**. Every `subagent_type` value is the unprefixed catalogue name.
 
@@ -199,6 +233,36 @@ Output structure:
 |---|---|---|---|
 | 1 | ... | impl, db | `tdd-guide → database-reviewer → swift-reviewer` |
 | ... | | | |
+
+## Parallel execution graph
+
+```mermaid
+flowchart TD
+  S1["Step 1: Add auth schema"]
+  S2["Step 2: Login endpoint"]
+  S3["Step 3: Signup endpoint"]
+  S4["Step 4: Update docs"]
+  S1 --> S2
+  S1 --> S3
+  S2 --> S4
+  S3 --> S4
+```
+
+**Parallel waves** — each wave runs concurrently in separate Claude sessions; wait for the wave to finish before launching the next:
+
+| Wave | Steps | Notes |
+|---|---|---|
+| 1 | step-1 | no upstream deps |
+| 2 | step-2, step-3 | both depend only on step-1; independent of each other |
+| 3 | step-4 | docs; waits for all preceding non-docs steps |
+
+**Dependency sources** — for every non-root step, list its `deps` and how each edge was derived (`explicit:"<phrase>"` quoting the plan, or `heuristic:<rule>`):
+
+- step-2 → deps: [step-1] (explicit: "depends on: step-1")
+- step-3 → deps: [step-1] (heuristic: shared entity "UserSession" with step-1)
+- step-4 → deps: [step-2, step-3] (heuristic: docs after non-docs)
+
+If a cycle was detected, add a `⚠️ Cycle:` line listing the members and the disagreeing edges; do not silently drop them.
 
 ---
 
@@ -239,9 +303,9 @@ After the last step block, append this verbatim execution note. It addresses **t
 
 > **How to execute this step**: paste the entire step block (header + all N Agent calls) into one Claude session. That session runs the Agent calls in the listed order. For each non-first call, parse the previous agent's HANDOFF block from its tool result and substitute it into the `<pass through>` slot of the next agent's prompt before invoking. Do not parallelize — the chain is sequential by design.
 
-No "Batch execution" block — each step block already is its own paste unit; cross-step batching would make HANDOFF threading impossible to follow.
+No "Batch execution" block — each step block already is its own paste unit; cross-step batching would make HANDOFF threading impossible to follow. Cross-step concurrency is expressed through the parallel-execution graph (waves), not through batched Agent calls.
 
-### Phase 5 — Self-check (run before emitting)
+### Phase 6 — Self-check (run before emitting)
 
 - [ ] Every emitted `subagent_type` value comes from the catalogue (after normalizing any prefixed form stripped in Phase 0 step 2).
 - [ ] Every `subagent_type` is **bare** (no `ecc:` prefix, no `everything-claude-code:` prefix). This repo's install is bare-symlink only.
@@ -257,6 +321,12 @@ No "Batch execution" block — each step block already is its own paste unit; cr
 - [ ] Overview table lists every step in the plan, regardless of `--scope`.
 - [ ] Per-step block count matches the resolved `--scope` (full plan when `--scope=all`; one block for `step:n`; range size for `range:a-b`). In overview-only mode, no per-step blocks emitted.
 - [ ] No "Batch execution" block present.
+- [ ] Parallel-execution graph section is present immediately after the overview table, regardless of `--scope` or `--dry-run`.
+- [ ] Mermaid block opens with ```` ```mermaid ```` and `flowchart TD`; every node id starts with `S` followed by the step number; every edge uses `-->`; node labels in double quotes; no unmatched quotes or stray newlines inside labels.
+- [ ] Waves table includes every step from the plan; each step appears in exactly one wave OR is marked `unscheduled` because it sits in a cycle.
+- [ ] Every non-root step has an annotated `deps` line tagged either `explicit:"<phrase>"` (verbatim from the plan) or `heuristic:<rule>`.
+- [ ] If a cycle was detected, both the Mermaid graph (`⚠️ cycle` edges) and the waves table (`⚠️ Cycle:` line, cycle members listed) call it out; no silent omission.
+- [ ] Transitive-reduction applied to rendered edges — no edge `A→C` is drawn if there is already a path `A→B→C` in the graph.
 
 ## Edge cases
 
@@ -325,6 +395,7 @@ Agent(
 - Match the language of the plan document for task descriptions (agent names always remain English).
 - Do not insert "Co-Authored-By" lines or emoji in the output unless the user explicitly asks.
 - **E2E / visual QA**: covered by `test` chain only for unit/integration review work. Plain E2E user-flow tests, browser automation, and visual design QA go through gstack `/qa` / `/browse` / `/design-review` (independent skill set, not in this catalogue).
+- **Parallel-execution graph**: derived from explicit `depends on` declarations + tag/entity heuristics. The Mermaid block renders directly in GitHub, Claude Code UI, and most Markdown viewers; the waves table is the executable companion (one wave = one round of concurrent Claude sessions). Cross-step concurrency lives in the graph; cross-agent intra-step sequencing lives in HANDOFF threading. Do not conflate the two.
 
 ## Arguments
 
