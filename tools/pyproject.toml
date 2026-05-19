@@ -27,4 +27,4 @@ testpaths = ["tests"]
 addopts = "-q --strict-markers"
 
 [tool.setuptools]
-py-modules = ["orchestrator"]
+py-modules = ["plan_md_to_json", "orchestrator", "handoff_extractor"]
