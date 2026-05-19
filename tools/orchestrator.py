@@ -51,7 +51,6 @@ Technical decisions encoded here (plan §5.4)
 from __future__ import annotations
 
 import json
-import shlex
 import subprocess
 import sys
 import uuid
@@ -62,6 +61,7 @@ from typing import Literal
 
 from handoff_extractor import extract_handoff
 from plan_md_to_json import StepEntry
+from quality_gate import GateStatus, run_quality_gate
 
 # ---------------------------------------------------------------------------
 # Constants (plan §5.4)
@@ -229,69 +229,50 @@ class HandoffExtractor:
 # ---------------------------------------------------------------------------
 
 class QualityGate:
-    """Thin quality gate: ``cd tools && ruff check . && pytest -x``.
+    """Thin quality gate: delegates to :func:`quality_gate.run_quality_gate`.
 
-    Design decisions (plan §5.4):
-    - Command is ``cd tools && ruff check . && pytest -x``
-    - Failure marks the step ``quality_gate_failed`` but does NOT stop pipeline
-    - ``tooling_missing`` is returned when the subprocess itself cannot be found
+    Design decisions (plan §5.4, §7.1):
+    - Uses ``subprocess.run`` with ``cwd=tools_dir`` and ``shell=False``
+      (no ``cd && cmd`` shell chaining — see ``quality_gate`` module).
+    - Failure marks the step ``quality_gate_failed`` but does NOT stop pipeline.
+    - ``tooling_missing`` is returned when ruff or pytest is not on PATH.
+    - Short-circuit: if ruff fails, pytest is not run.
+
+    Why a wrapper? :class:`StepRunner` was originally written against this
+    class so it could dependency-inject a mock; keeping the class preserves
+    that seam (and the existing skeleton tests) while the actual work moved
+    to a pure function that is easier to unit test.
     """
 
     def run(self) -> GateResult:
-        """Execute the quality gate and return a GateResult.
+        """Execute the quality gate and return a :class:`GateResult`.
 
-        Returns
-        -------
-        GateResult
-            .status is one of 'passed', 'quality_gate_failed', 'tooling_missing'.
+        The per-stage tails returned by
+        :func:`quality_gate.run_quality_gate` are merged into the legacy
+        ``stdout`` / ``stderr`` strings on :class:`GateResult` so callers
+        that already format these into summaries keep working.
         """
-        # Run from the repo root so the `cd tools` part is meaningful.
-        # _TOOLS_DIR is already the tools/ directory, so we run from its parent.
-        repo_root = _TOOLS_DIR.parent
-        # shlex.quote protects against paths with apostrophes or shell metachars
-        gate_cmd = f"cd {shlex.quote(str(_TOOLS_DIR))} && ruff check . && pytest -x"
+        result = run_quality_gate(_TOOLS_DIR)
 
-        try:
-            result = subprocess.run(  # noqa: S602  (shell=True for cd && chain; no user input)
-                gate_cmd,
-                shell=True,
-                text=True,
-                capture_output=True,
-                cwd=str(repo_root),
-                timeout=120,
-            )
-        except FileNotFoundError:
-            # belt-and-suspenders: under shell=True the shell itself is always
-            # found, so this rarely fires; the real tooling-missing signal is
-            # exit code 127 from the shell when ruff/pytest are absent.
-            return GateResult(
-                status="tooling_missing",
-                stdout="",
-                stderr="ruff or pytest binary not found",
-            )
-        except subprocess.TimeoutExpired:
-            return GateResult(
-                status="quality_gate_failed",
-                stdout="",
-                stderr="Quality gate timed out after 120 seconds",
-            )
+        stdout_parts: list[str] = []
+        stderr_parts: list[str] = []
+        for stage in ("ruff", "pytest"):
+            cmd_result = result.get(stage)
+            if cmd_result is None:
+                continue
+            if cmd_result["stdout_tail"]:
+                stdout_parts.append(f"=== {stage} stdout ===\n{cmd_result['stdout_tail']}")
+            if cmd_result["stderr_tail"]:
+                stderr_parts.append(f"=== {stage} stderr ===\n{cmd_result['stderr_tail']}")
 
-        if result.returncode == 127:
-            # Shell exits 127 when a command in the chain is not found
-            # (e.g. ruff or pytest binary missing). Surface that distinctly.
-            return GateResult(
-                status="tooling_missing",
-                stdout=result.stdout,
-                stderr=result.stderr or "command not found (exit 127)",
-            )
-
-        if result.returncode == 0:
-            return GateResult(status="passed", stdout=result.stdout, stderr=result.stderr)
+        status = result["status"]
+        if status == GateStatus.TOOLING_MISSING.value and not stderr_parts:
+            stderr_parts.append("ruff or pytest binary not found on PATH")
 
         return GateResult(
-            status="quality_gate_failed",
-            stdout=result.stdout,
-            stderr=result.stderr,
+            status=status,  # type: ignore[arg-type]  # values match the Literal alphabet
+            stdout="\n".join(stdout_parts),
+            stderr="\n".join(stderr_parts),
         )
 
 

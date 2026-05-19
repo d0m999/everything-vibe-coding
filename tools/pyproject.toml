@@ -33,4 +33,4 @@ markers = [
 ]
 
 [tool.setuptools]
-py-modules = ["plan_md_to_json", "orchestrator", "handoff_extractor"]
+py-modules = ["plan_md_to_json", "orchestrator", "handoff_extractor", "quality_gate"]
