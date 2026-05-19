@@ -1,2 +1,4 @@
 *.bak
 .claude/settings.local.json
+plan/
+.work/
