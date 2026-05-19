@@ -1,4 +1,4 @@
-"""Stub module for HANDOFF block extraction from stream-json JSONL output.
+"""HANDOFF block extraction from stream-json JSONL output.
 
 Public API
 ----------
@@ -6,25 +6,19 @@ extract_handoff(jsonl_text: str) -> str
     Scan a stream-json JSONL transcript and return the last <handoff>...</handoff>
     block found across all assistant turns.
 
-    Returns MISSING_HANDOFF_PLACEHOLDER when no block is found (or on parse error).
-
-Implementation status
----------------------
-This module is a STUB for step-7.  The function signature is final; the real
-extraction logic (scan all assistant turns, regex for last <handoff> block,
-JSON-decode, fallback on error) is implemented in step-9.
-
-Until step-9 lands, extract_handoff() always returns MISSING_HANDOFF_PLACEHOLDER.
-This is correct: step-7 does not splice HANDOFF between agents — each agent
-receives its prompt verbatim from the JSON.
+    Returns MISSING_HANDOFF_PLACEHOLDER when no block is found or on any parse
+    error (malformed JSON line, invalid JSON inside the tag, etc.).
 """
 
 from __future__ import annotations
 
+import json
+import re
+
 from plan_md_to_json import MISSING_HANDOFF_PLACEHOLDER
 
 
-def extract_handoff(jsonl_text: str) -> str:  # noqa: ARG001
+def extract_handoff(jsonl_text: str) -> str:
     """Extract the last <handoff>...</handoff> block from a stream-json transcript.
 
     Parameters
@@ -36,20 +30,57 @@ def extract_handoff(jsonl_text: str) -> str:  # noqa: ARG001
     Returns
     -------
     str
-        The JSON string inside the last ``<handoff>...</handoff>`` block found
-        across all ``type=assistant`` events, or ``MISSING_HANDOFF_PLACEHOLDER``
-        if no block is found or any parse error occurs.
+        The compactly re-serialized JSON string inside the last
+        ``<handoff>...</handoff>`` block found across ALL ``type=assistant``
+        events, or ``MISSING_HANDOFF_PLACEHOLDER`` if no block is found or any
+        parse error occurs.
 
-    Notes
-    -----
-    STUB — step-9 will implement the real extraction logic:
-    1. Parse each line as JSON.
-    2. Filter ``type == "assistant"`` events.
-    3. Scan ``message.content[*].text`` for ``<handoff>...</handoff>``.
-    4. Return the LAST match; fall back to MISSING_HANDOFF_PLACEHOLDER.
+    Algorithm
+    ---------
+    1. Split on newlines; skip blank lines.
+    2. ``json.loads`` each line; skip lines that raise ``json.JSONDecodeError``.
+    3. Keep only events whose top-level ``type == "assistant"``.
+    4. From each assistant event walk ``message.content[*]`` items whose
+       ``type == "text"`` and collect their ``text`` field.
+    5. Concatenate all collected text fragments (in order) into one string so
+       that regex matching spans assistant turns.
+    6. ``re.findall(r"<handoff>(.*?)</handoff>", combined, re.DOTALL)`` —
+       ``re.DOTALL`` is required so newlines inside the block are matched.
+    7. Take the LAST match; if no matches return ``MISSING_HANDOFF_PLACEHOLDER``.
+    8. ``json.loads(last_match.strip())`` — on ``json.JSONDecodeError`` return
+       ``MISSING_HANDOFF_PLACEHOLDER``; on success return
+       ``json.dumps(parsed, ensure_ascii=False, separators=(",", ":"))``
+       (compact single-line-ish form; preserves Unicode).
     """
-    # TODO(step-9): implement real extraction — scan jsonl_text line by line,
-    # filter type=assistant events, collect all <handoff>...</handoff> regex
-    # matches from message.content[*].text, return the last one.
-    # For now, always return the placeholder so step-7 ships green.
-    return MISSING_HANDOFF_PLACEHOLDER
+    text_fragments: list[str] = []
+
+    for line in jsonl_text.splitlines():
+        if not line.strip():
+            continue
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+
+        if event.get("type") != "assistant":
+            continue
+
+        for item in event.get("message", {}).get("content", []):
+            if item.get("type") == "text":
+                fragment = item.get("text", "")
+                if fragment:
+                    text_fragments.append(fragment)
+
+    combined = "".join(text_fragments)
+    matches = re.findall(r"<handoff>(.*?)</handoff>", combined, re.DOTALL)
+
+    if not matches:
+        return MISSING_HANDOFF_PLACEHOLDER
+
+    last_match = matches[-1]
+    try:
+        parsed = json.loads(last_match.strip())
+    except json.JSONDecodeError:
+        return MISSING_HANDOFF_PLACEHOLDER
+
+    return json.dumps(parsed, ensure_ascii=False, separators=(",", ":"))

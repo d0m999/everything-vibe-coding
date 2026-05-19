@@ -11,8 +11,8 @@ ProcessRunner
 
 HandoffExtractor (thin wrapper)
     Delegates to ``handoff_extractor.extract_handoff()``.
-    Step-9 will implement the real extraction; for now it always returns
-    ``MISSING_HANDOFF_PLACEHOLDER``.
+    Scans stream-json JSONL for the last ``<handoff>...</handoff>`` block across
+    all assistant turns; falls back to ``MISSING_HANDOFF_PLACEHOLDER``.
 
 QualityGate
     Runs ``cd tools && ruff check . && pytest -x`` and returns a GateResult.
@@ -371,14 +371,12 @@ class StepRunner:
         for agent_index, agent in enumerate(step["agents"], start=1):
             prompt = agent["prompt"]
 
-            # TODO(step-9): splice HANDOFF from prior agent here.
-            # For now, each agent receives its prompt verbatim from the JSON.
-            # When implementing step-9, replace the verbatim prompt with:
-            #   if agent_index > 1 and agent_results:
-            #       prior_handoff = self._handoff_extractor.extract(
-            #           agent_results[-1].stdout_path.read_text(encoding="utf-8")
-            #       )
-            #       prompt = f"[Prior HANDOFF: {prior_handoff}]\n\n{prompt}"
+            # Splice prior HANDOFF for non-first agents (plan §5.4).
+            if agent_index > 1 and agent_results:
+                prior_jsonl = agent_results[-1].stdout_path.read_text(encoding="utf-8")
+                prior_handoff = self._handoff_extractor.extract(prior_jsonl)
+                prev_name = step["agents"][agent_index - 2]["name"]
+                prompt = f"[Prior HANDOFF from {prev_name}: {prior_handoff}]\n\n{prompt}"
 
             try:
                 proc_result = self._process_runner.run(
