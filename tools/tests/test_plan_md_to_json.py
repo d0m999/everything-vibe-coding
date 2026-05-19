@@ -949,3 +949,168 @@ Agent(
 """
         result = parse(md)
         assert result["steps"][0]["agents"][0]["prompt"] == "spaced value here"
+
+
+# ---------------------------------------------------------------------------
+# New test 1 — mixed tagged and bare fences in one Step
+# ---------------------------------------------------------------------------
+
+def test_parse_mixed_tagged_and_bare_fences_both_extracted() -> None:
+    """A Step with one language-tagged fence and one bare fence yields two agents in order."""
+    md = """\
+# Plan-Orchestrate Result
+
+**Plan**: `docs/demo-plan.md`
+**Lang**: `python`
+**Steps**: 1
+**Scope**: all
+
+## Steps overview
+
+| # | Title | Tags | Chain |
+|---|---|---|---|
+| 1 | foo | impl | chain |
+
+## Parallel execution graph
+
+| Wave | Steps | Notes |
+|---|---|---|
+| 1 | step-1 | no deps |
+
+**Dependency sources**:
+
+---
+
+## Step 1 — foo
+
+**Intent**: foo.
+**Tags**: impl
+**Chain rationale**: chain.
+
+### Agents
+
+1.
+```Agent
+Agent(
+  subagent_type="code-explorer",
+  prompt="[Plan: docs/demo-plan.md#step-1] explore codebase."
+)
+```
+
+2.
+```
+Agent(
+  subagent_type="tdd-guide",
+  prompt="[Plan: docs/demo-plan.md#step-1] implement. End with HANDOFF."
+)
+```
+
+---
+"""
+    result = parse(md)
+    agents = result["steps"][0]["agents"]
+    assert len(agents) == 2
+    assert agents[0]["name"] == "code-explorer"
+    assert agents[1]["name"] == "tdd-guide"
+
+
+# ---------------------------------------------------------------------------
+# New test 2 — step without **Tags**: line returns empty list
+# ---------------------------------------------------------------------------
+
+def test_step_without_tags_line_returns_empty_list() -> None:
+    """When **Tags**: line is absent from a step, tags must be []."""
+    md = """\
+# Plan-Orchestrate Result
+
+**Plan**: `docs/demo-plan.md`
+**Lang**: `python`
+**Steps**: 1
+**Scope**: all
+
+## Steps overview
+
+| # | Title | Tags | Chain |
+|---|---|---|---|
+| 1 | foo | impl | chain |
+
+## Parallel execution graph
+
+| Wave | Steps | Notes |
+|---|---|---|
+| 1 | step-1 | no deps |
+
+**Dependency sources**:
+
+---
+
+## Step 1 — foo
+
+**Intent**: foo.
+**Chain rationale**: chain.
+
+### Agents
+
+1.
+```
+Agent(
+  subagent_type="tdd-guide",
+  prompt="[Plan: docs/demo-plan.md#step-1] implement. End with HANDOFF."
+)
+```
+
+---
+"""
+    result = parse(md)
+    assert result["steps"][0]["tags"] == []
+
+
+# ---------------------------------------------------------------------------
+# New test 3 — step without **Chain rationale**: line returns empty string
+# ---------------------------------------------------------------------------
+
+def test_step_without_chain_line_returns_empty_string() -> None:
+    """When **Chain rationale**: line is absent from a step, chain must be ''."""
+    md = """\
+# Plan-Orchestrate Result
+
+**Plan**: `docs/demo-plan.md`
+**Lang**: `python`
+**Steps**: 1
+**Scope**: all
+
+## Steps overview
+
+| # | Title | Tags | Chain |
+|---|---|---|---|
+| 1 | foo | impl | chain |
+
+## Parallel execution graph
+
+| Wave | Steps | Notes |
+|---|---|---|
+| 1 | step-1 | no deps |
+
+**Dependency sources**:
+
+---
+
+## Step 1 — foo
+
+**Intent**: foo.
+**Tags**: impl
+
+### Agents
+
+1.
+```
+Agent(
+  subagent_type="tdd-guide",
+  prompt="[Plan: docs/demo-plan.md#step-1] implement. End with HANDOFF."
+)
+```
+
+---
+"""
+    result = parse(md)
+    assert result["steps"][0]["chain"] == ""
