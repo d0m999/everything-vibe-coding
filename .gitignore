@@ -2,3 +2,11 @@
 .claude/settings.local.json
 plan/
 .work/
+
+# Python build / test artifacts
+__pycache__/
+*.egg-info/
+.coverage
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
