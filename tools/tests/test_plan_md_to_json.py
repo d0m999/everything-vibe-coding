@@ -242,7 +242,7 @@ class TestParseErrorCases:
     """Explicit ParseError branches required by spec."""
 
     def test_empty_string_raises(self) -> None:
-        with pytest.raises(ParseError):
+        with pytest.raises(ParseError, match=r"empty|blank"):
             parse("")
 
     def test_missing_anchor_raises(self) -> None:
