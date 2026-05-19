@@ -190,7 +190,12 @@ class TestProcessRunnerArgvShape:
         idx = argv.index("--output-format")
         assert argv[idx + 1] == "stream-json"
 
-    def test_argv_contains_print_flag(self, tmp_path: Path) -> None:
+    def test_argv_contains_verbose_flag(self, tmp_path: Path) -> None:
+        """--verbose is required when combining -p with --output-format=stream-json.
+
+        The -p flag already enables print mode; --verbose unlocks the stream-json
+        output channel.  The old bare --print flag has been replaced.
+        """
         runner = ProcessRunner()
         captured: list[list[str]] = []
 
@@ -202,7 +207,7 @@ class TestProcessRunnerArgvShape:
             runner.run(prompt="hello", work_dir=tmp_path, agent_name="tdd-guide", agent_index=1)
 
         argv = captured[0]
-        assert "--print" in argv
+        assert "--verbose" in argv
 
     def test_argv_text_true_and_capture_output(self, tmp_path: Path) -> None:
         """subprocess.run must use text=True and capture_output=True."""

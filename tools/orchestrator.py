@@ -117,7 +117,10 @@ class ProcessRunner:
          '--max-turns', '40',
          '--session-id', '<uuid4>',
          '--output-format', 'stream-json',
-         '--print']
+         '--verbose']
+
+    Note: ``-p`` enables print/non-interactive mode; ``--verbose`` is required
+    by the CLI when combining ``-p`` with ``--output-format=stream-json``.
 
     Keyword args to subprocess.run:
         text=True, capture_output=True, timeout=600, shell=False (default).
@@ -168,7 +171,9 @@ class ProcessRunner:
             session_id,
             "--output-format",
             "stream-json",
-            "--print",
+            "--verbose",
+            # NOTE: --verbose is required when combining --print with
+            # --output-format=stream-json (claude CLI enforces this).
         ]
 
         stdout_path = work_dir / f"agent-{agent_index}-{agent_name}.jsonl"

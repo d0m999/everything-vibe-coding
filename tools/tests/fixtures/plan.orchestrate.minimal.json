@@ -1,0 +1,27 @@
+{
+  "meta": {
+    "plan": "orchestrator-mvp",
+    "lang": "python",
+    "py_sub": null,
+    "steps_count": 1,
+    "scope": "step-8 checkpoint-B minimal fixture"
+  },
+  "steps": [
+    {
+      "id": 1,
+      "title": "Step 8 minimal fixture",
+      "tags": ["test"],
+      "chain": "fixture-only",
+      "agents": [
+        {
+          "name": "echo-reader",
+          "prompt": "请先输出文本 \"HELLO from fixture step-8\"，然后用 Read 工具读取这个文件的第 1 行：{{TARGET_FILE}}。把读到的第 1 行内容用一句话回复，完成后结束。"
+        }
+      ]
+    }
+  ],
+  "parallel_graph": {
+    "waves": [],
+    "deps": []
+  }
+}

@@ -24,7 +24,13 @@ select = ["E", "F", "I", "B", "UP"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-q --strict-markers"
+# Default: deselect integration tests so quality-gate `pytest -x` does not
+# accidentally fire real subprocess / API calls.  Run them explicitly with
+# `pytest -m integration` (or `-m 'integration or not integration'`).
+addopts = "-q --strict-markers -m 'not integration'"
+markers = [
+    "integration: real subprocess / network tests (opt in with -m integration)",
+]
 
 [tool.setuptools]
 py-modules = ["plan_md_to_json", "orchestrator", "handoff_extractor"]
