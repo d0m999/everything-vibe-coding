@@ -388,9 +388,8 @@ class TestParseRealDemoFixtureEndToEnd:
         dep = result["parallel_graph"]["deps"][0]
         assert dep["step"] == "step-2"
         assert dep["deps"] == ["step-1"]
-        # annotation must be a non-empty string (exact text is implementation detail)
-        assert isinstance(dep["annotation"], str)
-        assert len(dep["annotation"]) > 0
+        # annotation must reference the upstream step
+        assert "step-1" in dep["annotation"]
 
     def test_meta_scope_all(self) -> None:
         result = parse(_REAL_DEMO_MD)
