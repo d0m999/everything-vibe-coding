@@ -361,6 +361,13 @@ def parse(md_str: str) -> PlanResult:
     ------
     ParseError
         If any required structural element is missing or malformed.
+
+    Notes
+    -----
+    ``tags`` and ``chain`` within each :class:`StepEntry` are optional fields:
+    if the ``**Tags**:`` line is absent the list is ``[]``; if the
+    ``**Chain rationale**:`` line is absent the string is ``""``.  Neither
+    absence raises a :class:`ParseError`.
     """
     if not md_str or not md_str.strip():
         raise ParseError("Input is empty or blank.")
