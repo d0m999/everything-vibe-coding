@@ -98,6 +98,9 @@ _RE_CHAIN = re.compile(r"^\*\*Chain rationale\*\*:\s*(.+)$", re.MULTILINE)
 # subagent_type field inside an Agent(...) fence
 _RE_SUBAGENT_TYPE = re.compile(r'^\s*subagent_type="([^"]+)"', re.MULTILINE)
 
+# Triple-backtick fence — optional language tag after opening backticks
+_RE_AGENT_FENCE = re.compile(r"```[^\n]*\n(.*?)```", re.DOTALL)
+
 # Waves table row: | int | step-... | notes |
 _RE_WAVE_ROW = re.compile(r"^\|\s*(\d+)\s*\|\s*([^|]+)\|\s*([^|]+)\|", re.MULTILINE)
 
@@ -151,10 +154,9 @@ def _parse_meta(body: str) -> MetaBlock:
 
 def _extract_agent_fences(step_text: str, step_id: int) -> list[AgentEntry]:
     """Extract all Agent(...) fences from a step block text."""
-    # Split on triple-backtick fences
-    # Pattern: ``` ... Agent(\n  subagent_type="...",\n  prompt="..."\n) ... ```
-    fence_pattern = re.compile(r"```\s*\n(.*?)```", re.DOTALL)
-    fences = fence_pattern.findall(step_text)
+    # Use module-level _RE_AGENT_FENCE which accepts an optional language tag
+    # (e.g. ```Agent or ```text) after the opening triple-backticks.
+    fences = _RE_AGENT_FENCE.findall(step_text)
 
     agents: list[AgentEntry] = []
     for fence_content in fences:
