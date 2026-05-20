@@ -28,7 +28,9 @@ Design (plan §5.4, §7.1; review notes)
 
 from __future__ import annotations
 
+import importlib.util
 import subprocess
+import sys
 from enum import StrEnum
 from pathlib import Path
 from typing import TypedDict
@@ -166,7 +168,19 @@ def run_quality_gate(tools_dir: Path) -> QualityGateResult:
             pytest=None,
         )
 
-    pytest_result = _run_stage(["pytest", "-x"], cwd=tools_dir)
+    if importlib.util.find_spec("pytest") is None:
+        # pytest not importable in THIS interpreter — graceful degradation,
+        # mirroring the ruff-binary-missing path above.
+        return QualityGateResult(
+            status=GateStatus.TOOLING_MISSING.value,
+            ruff=ruff_result,
+            pytest=None,
+        )
+
+    # Pin pytest to the interpreter running the orchestrator (sys.executable)
+    # so the gate can't silently pick up a different Python on PATH (e.g. a
+    # 3.10 ``pytest`` shim) and mis-report an ImportError as a test failure.
+    pytest_result = _run_stage([sys.executable, "-m", "pytest", "-x"], cwd=tools_dir)
     if pytest_result is None:
         return QualityGateResult(
             status=GateStatus.TOOLING_MISSING.value,

@@ -106,7 +106,9 @@ def test_pytest_failed(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     def fake(argv: list[str], **_kwargs: Any) -> subprocess.CompletedProcess[str]:
         if argv[0] == "ruff":
             return _mk_completed(argv, returncode=0)
-        if argv[0] == "pytest":
+        # pytest is now invoked as [sys.executable, "-m", "pytest", "-x"] so it
+        # is no longer argv[0]; match on membership instead.
+        if "pytest" in argv:
             return _mk_completed(argv, returncode=1, stdout="", stderr="1 failed")
         raise AssertionError(f"unexpected argv: {argv}")
 
@@ -118,6 +120,59 @@ def test_pytest_failed(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     assert result["pytest"] is not None and result["pytest"]["returncode"] == 1
     assert "1 failed" in result["pytest"]["stderr_tail"]
     assert spy.call_count == 2
+
+
+def test_pytest_invoked_via_sys_executable(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """pytest must run as ``[sys.executable, '-m', 'pytest', ...]``.
+
+    Pins the gate to the interpreter running the orchestrator so a stray
+    ``pytest`` shim for a different Python on PATH cannot mis-report an
+    ImportError (e.g. 3.11-only ``StrEnum``) as a genuine test failure.
+    """
+    import sys
+
+    def fake(argv: list[str], **_kwargs: Any) -> subprocess.CompletedProcess[str]:
+        return _mk_completed(argv, returncode=0)
+
+    spy = _install_fake_run(monkeypatch, fake)
+    run_quality_gate(tmp_path)
+
+    pytest_calls = [c for c in spy.call_args_list if "pytest" in c.args[0]]
+    assert len(pytest_calls) == 1, "expected exactly one pytest invocation"
+    pytest_argv = pytest_calls[0].args[0]
+    assert pytest_argv[0] == sys.executable, (
+        f"pytest must be launched via sys.executable, got argv[0]={pytest_argv[0]!r}"
+    )
+    assert pytest_argv[1:3] == ["-m", "pytest"], (
+        f"expected '-m pytest' module invocation, got {pytest_argv!r}"
+    )
+
+
+def test_tooling_missing_pytest_not_importable(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """ruff clean but pytest not importable in this interpreter → tooling_missing."""
+
+    def fake(argv: list[str], **_kwargs: Any) -> subprocess.CompletedProcess[str]:
+        # Only ruff should ever run; pytest is gated out before subprocess.
+        assert argv[0] == "ruff", f"pytest must not be spawned when not importable: {argv}"
+        return _mk_completed(argv, returncode=0)
+
+    spy = _install_fake_run(monkeypatch, fake)
+    real_find_spec = quality_gate.importlib.util.find_spec
+    monkeypatch.setattr(
+        quality_gate.importlib.util,
+        "find_spec",
+        lambda name, *a, **k: None if name == "pytest" else real_find_spec(name, *a, **k),
+    )
+    result = run_quality_gate(tmp_path)
+
+    assert result["status"] == GateStatus.TOOLING_MISSING.value
+    assert result["ruff"] is not None and result["ruff"]["returncode"] == 0
+    assert result["pytest"] is None
+    assert spy.call_count == 1, "pytest must not be spawned when find_spec returns None"
 
 
 def test_tooling_missing_ruff(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:

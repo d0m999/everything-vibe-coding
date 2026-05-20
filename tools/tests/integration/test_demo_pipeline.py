@@ -173,11 +173,23 @@ def test_demo_pipeline_end_to_end(
 
         agent2_prompt = prompt_file.read_text(encoding="utf-8")
 
-        # 4b: prompt must start with the HANDOFF splice prefix
-        assert agent2_prompt.startswith(_HANDOFF_PREFIX), (
-            f"step-{step_id} agent-2 prompt.txt does not start with "
-            f"{_HANDOFF_PREFIX!r}; HANDOFF splice not applied.\n"
-            f"  prompt head: {agent2_prompt[:200]!r}\n"
+        # 4b: the real HANDOFF must be spliced into the prompt exactly once,
+        #     with no stale '<pass through>' placeholder left behind.  The
+        #     fixture's agent-2 prompts carry the skill placeholder, so the
+        #     splice substitutes it in place (the prompt keeps its '[Plan: ...]'
+        #     head) rather than gaining a second prefix.
+        assert _HANDOFF_PREFIX in agent2_prompt, (
+            f"step-{step_id} agent-2 prompt.txt missing {_HANDOFF_PREFIX!r}; "
+            f"HANDOFF splice not applied.\n  prompt head: {agent2_prompt[:200]!r}\n"
+            f"  file: {prompt_file}"
+        )
+        assert "<pass through>" not in agent2_prompt, (
+            f"step-{step_id} agent-2 prompt.txt still contains the '<pass through>' "
+            f"placeholder — splice did not substitute it in place.\n  file: {prompt_file}"
+        )
+        assert agent2_prompt.count(_HANDOFF_PREFIX) == 1, (
+            f"step-{step_id} agent-2 prompt.txt has a duplicated HANDOFF marker "
+            f"(count={agent2_prompt.count(_HANDOFF_PREFIX)}); expected exactly one.\n"
             f"  file: {prompt_file}"
         )
 

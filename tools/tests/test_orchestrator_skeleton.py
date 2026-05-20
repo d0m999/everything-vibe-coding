@@ -448,19 +448,26 @@ class TestStepRunnerHelloWorldFixture:
         jsonl_files = list(tmp_path.rglob("*.jsonl"))
         assert len(jsonl_files) == 2, f"Expected 2 .jsonl files, got {len(jsonl_files)}"
 
-    def test_handoff_splice_prefix_in_agent2_prompt_file(self, tmp_path: Path) -> None:
-        """agent-2's prompt.txt must start with '[Prior HANDOFF from ' after splice.
+    def test_handoff_substituted_in_place_in_agent2_prompt_file(self, tmp_path: Path) -> None:
+        """The skill's ``<pass through>`` placeholder is replaced in place.
 
-        StepRunner reads agent-1's JSONL, extracts the HANDOFF block, and
-        prepends it to agent-2's prompt before calling ProcessRunner.run().
-        The prompt audit file must capture the spliced prompt verbatim.
+        The plan-orchestrate skill emits non-first prompts carrying a literal
+        ``[Prior HANDOFF from <prev>: <pass through>]`` placeholder.  StepRunner
+        must substitute that placeholder with the real prior HANDOFF — not
+        prepend a second copy — so the audit file shows exactly one HANDOFF
+        marker and no stale ``<pass through>`` token.
         """
         from plan_md_to_json import MISSING_HANDOFF_PLACEHOLDER  # noqa: PLC0415
 
+        # agent-2's prompt is the realistic emitted form (carries the placeholder).
+        agent2_emitted = (
+            "[Plan: demo#step-1] [Prior HANDOFF from tdd-guide: <pass through>] "
+            "Review the code."
+        )
         step = _make_step(
             agents=[
                 _make_agent(name="tdd-guide", prompt="Write tests first."),
-                _make_agent(name="python-reviewer", prompt="Review the code."),
+                _make_agent(name="python-reviewer", prompt=agent2_emitted),
             ]
         )
 
@@ -490,14 +497,66 @@ class TestStepRunnerHelloWorldFixture:
         )
         agent2_prompt = prompt_files[0].read_text(encoding="utf-8")
 
-        assert agent2_prompt.startswith("[Prior HANDOFF from "), (
-            f"agent-2 prompt.txt must start with '[Prior HANDOFF from '; "
-            f"got: {agent2_prompt[:120]!r}"
+        # Real HANDOFF was spliced into the placeholder slot.
+        assert '[Prior HANDOFF from tdd-guide: {"plan":"implement feature X"}]' in agent2_prompt, (
+            f"real HANDOFF not substituted into the placeholder; got: {agent2_prompt!r}"
+        )
+        # No stale placeholder token, no duplicated HANDOFF marker.
+        assert "<pass through>" not in agent2_prompt, (
+            f"stale '<pass through>' placeholder left in prompt: {agent2_prompt!r}"
+        )
+        assert agent2_prompt.count("[Prior HANDOFF from ") == 1, (
+            "exactly one HANDOFF marker expected (no double prefix); "
+            f"got {agent2_prompt.count('[Prior HANDOFF from ')}: {agent2_prompt!r}"
+        )
+        # Substitution is in place — the original prompt prefix is preserved.
+        assert agent2_prompt.startswith("[Plan: demo#step-1]"), (
+            "in-place substitution must preserve the original prompt head; "
+            f"got: {agent2_prompt[:80]!r}"
         )
         assert MISSING_HANDOFF_PLACEHOLDER not in agent2_prompt, (
             "agent-2 prompt.txt must NOT contain the missing-handoff placeholder; "
             "a real HANDOFF was available from agent-1"
         )
+
+    def test_handoff_prepended_when_no_placeholder(self, tmp_path: Path) -> None:
+        """Fallback: a prompt without the placeholder gets the HANDOFF prepended.
+
+        Hand-built prompts (no skill placeholder) must still receive threaded
+        context — StepRunner prepends a single ``[Prior HANDOFF from ...]`` line.
+        """
+        step = _make_step(
+            agents=[
+                _make_agent(name="tdd-guide", prompt="Write tests first."),
+                _make_agent(name="python-reviewer", prompt="Review the code."),
+            ]
+        )
+
+        mock_gate = MagicMock(spec=QualityGate)
+        mock_gate.run.return_value = GateResult(status="passed", stdout="", stderr="")
+
+        agent1_jsonl = (
+            '{"type":"assistant","message":{"content":[{"type":"text","text":'
+            '"<handoff>{\\\"plan\\\":\\\"implement feature X\\\"}\\n</handoff>"}]}}\n'
+        )
+        responses = [
+            _fake_completed_process(returncode=0, stdout=agent1_jsonl),
+            _fake_completed_process(returncode=0, stdout='{"type":"result"}\n'),
+        ]
+
+        runner = StepRunner(work_dir=tmp_path, quality_gate=mock_gate)
+        with patch("orchestrator.subprocess.run", side_effect=responses):
+            runner.run_step(step)
+
+        prompt_files = list(tmp_path.rglob("agent-2-python-reviewer.prompt.txt"))
+        assert len(prompt_files) == 1
+        agent2_prompt = prompt_files[0].read_text(encoding="utf-8")
+
+        assert agent2_prompt.startswith("[Prior HANDOFF from tdd-guide: "), (
+            f"fallback must prepend the HANDOFF; got: {agent2_prompt[:120]!r}"
+        )
+        assert agent2_prompt.count("[Prior HANDOFF from ") == 1
+        assert agent2_prompt.rstrip().endswith("Review the code.")
 
 
 # ---------------------------------------------------------------------------

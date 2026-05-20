@@ -78,6 +78,12 @@ _SUBPROCESS_TIMEOUT = 600  # seconds — may be too short for impl-class agents
 
 _TOOLS_DIR = Path(__file__).parent  # tools/ directory
 
+# Literal placeholder the plan-orchestrate skill emits inside every non-first
+# prompt (``[Prior HANDOFF from <prev>: <pass through>]``).  StepRunner
+# substitutes it in place with the real prior HANDOFF — see _splice_handoff.
+# Must stay in sync with commands/plan-orchestrate.md ("HANDOFF block format").
+_HANDOFF_PASS_THROUGH = "<pass through>"
+
 
 # ---------------------------------------------------------------------------
 # Data classes
@@ -214,6 +220,27 @@ def _monotonic() -> float:
     """Return a monotonic time value in seconds (wall-clock proxy for tests)."""
     import time
     return time.monotonic()
+
+
+def _splice_handoff(prompt: str, prev_name: str, prior_handoff: str) -> str:
+    """Inject the real prior HANDOFF into a non-first agent's prompt.
+
+    The plan-orchestrate skill emits non-first prompts carrying a literal
+    placeholder ``[Prior HANDOFF from <prev>: <pass through>]`` (see
+    ``commands/plan-orchestrate.md`` → "HANDOFF block format").  We substitute
+    that placeholder **in place** — matching the documented executor contract
+    ("substitute it into the ``<pass through>`` slot") — so the downstream
+    agent never sees a stale ``<pass through>`` token or a duplicated HANDOFF
+    marker.
+
+    When the prompt carries no such placeholder (e.g. a hand-built prompt),
+    fall back to prepending the HANDOFF so the context is still threaded.
+    """
+    real = f"[Prior HANDOFF from {prev_name}: {prior_handoff}]"
+    placeholder = f"[Prior HANDOFF from {prev_name}: {_HANDOFF_PASS_THROUGH}]"
+    if placeholder in prompt:
+        return prompt.replace(placeholder, real, 1)
+    return f"{real}\n\n{prompt}"
 
 
 # ---------------------------------------------------------------------------
@@ -365,7 +392,7 @@ class StepRunner:
                 prior_jsonl = agent_results[-1].stdout_path.read_text(encoding="utf-8")
                 prior_handoff = self._handoff_extractor.extract(prior_jsonl)
                 prev_name = step["agents"][agent_index - 2]["name"]
-                prompt = f"[Prior HANDOFF from {prev_name}: {prior_handoff}]\n\n{prompt}"
+                prompt = _splice_handoff(prompt, prev_name, prior_handoff)
 
             try:
                 proc_result = self._process_runner.run(
@@ -465,6 +492,18 @@ def run_plan(plan_json_path: Path) -> int:
     """
     plan_data = json.loads(plan_json_path.read_text(encoding="utf-8"))
 
+    steps_data = plan_data.get("steps", [])
+    if not steps_data:
+        # A plan with no steps is a structural error, not a successful no-op —
+        # fail loud (exit 2) instead of writing an empty summary and exit 0.
+        print(
+            f"Error: plan has no steps: {plan_json_path}\n"
+            "  expected a non-empty 'steps' array produced by "
+            "plan_md_to_json.parse_file().",
+            file=sys.stderr,
+        )
+        return 2
+
     iso_ts = datetime.now(tz=timezone.utc).strftime("%Y%m%dT%H%M%SZ")  # noqa: UP017
     # Resolve to absolute so summary.json is self-contained — consumers
     # (ralph.sh outer loop, human readers) shouldn't have to know cwd.
@@ -478,7 +517,7 @@ def run_plan(plan_json_path: Path) -> int:
     any_crashed = False
     any_gate_failed = False
 
-    for step in plan_data.get("steps", []):
+    for step in steps_data:
         step_entry = StepEntry(
             id=step["id"],
             title=step["title"],
