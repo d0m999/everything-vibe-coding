@@ -90,6 +90,7 @@ class ProcessResult:
     returncode: int
     stdout_path: Path
     stderr_path: Path
+    prompt_path: Path
     stderr_nonempty: bool
     duration_s: float
 
@@ -178,8 +179,14 @@ class ProcessRunner:
 
         stdout_path = work_dir / f"agent-{agent_index}-{agent_name}.jsonl"
         stderr_path = work_dir / f"agent-{agent_index}-{agent_name}.stderr.log"
+        prompt_path = work_dir / f"agent-{agent_index}-{agent_name}.prompt.txt"
 
         work_dir.mkdir(parents=True, exist_ok=True)
+
+        # Audit trail: write the full prompt (including any HANDOFF splice) to
+        # disk BEFORE invoking the subprocess.  This makes post-hoc inspection
+        # possible via plain `cat` without parsing stream-json. (plan §5.4)
+        prompt_path.write_text(prompt, encoding="utf-8")
 
         t_start = _monotonic()
         completed = subprocess.run(  # noqa: S603  (shell=False by default — no injection risk)
@@ -197,6 +204,7 @@ class ProcessRunner:
             returncode=completed.returncode,
             stdout_path=stdout_path,
             stderr_path=stderr_path,
+            prompt_path=prompt_path,
             stderr_nonempty=bool(completed.stderr),
             duration_s=duration_s,
         )
@@ -458,7 +466,9 @@ def run_plan(plan_json_path: Path) -> int:
     plan_data = json.loads(plan_json_path.read_text(encoding="utf-8"))
 
     iso_ts = datetime.now(tz=timezone.utc).strftime("%Y%m%dT%H%M%SZ")  # noqa: UP017
-    run_dir = Path(".work") / f"run-{iso_ts}"
+    # Resolve to absolute so summary.json is self-contained — consumers
+    # (ralph.sh outer loop, human readers) shouldn't have to know cwd.
+    run_dir = (Path(".work") / f"run-{iso_ts}").resolve()
     run_dir.mkdir(parents=True, exist_ok=True)
 
     gate = QualityGate()

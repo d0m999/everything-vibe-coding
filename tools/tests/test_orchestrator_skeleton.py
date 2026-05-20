@@ -448,6 +448,57 @@ class TestStepRunnerHelloWorldFixture:
         jsonl_files = list(tmp_path.rglob("*.jsonl"))
         assert len(jsonl_files) == 2, f"Expected 2 .jsonl files, got {len(jsonl_files)}"
 
+    def test_handoff_splice_prefix_in_agent2_prompt_file(self, tmp_path: Path) -> None:
+        """agent-2's prompt.txt must start with '[Prior HANDOFF from ' after splice.
+
+        StepRunner reads agent-1's JSONL, extracts the HANDOFF block, and
+        prepends it to agent-2's prompt before calling ProcessRunner.run().
+        The prompt audit file must capture the spliced prompt verbatim.
+        """
+        from plan_md_to_json import MISSING_HANDOFF_PLACEHOLDER  # noqa: PLC0415
+
+        step = _make_step(
+            agents=[
+                _make_agent(name="tdd-guide", prompt="Write tests first."),
+                _make_agent(name="python-reviewer", prompt="Review the code."),
+            ]
+        )
+
+        mock_gate = MagicMock(spec=QualityGate)
+        mock_gate.run.return_value = GateResult(status="passed", stdout="", stderr="")
+
+        # agent-1 stdout contains a real HANDOFF block so HandoffExtractor
+        # returns a non-placeholder value and StepRunner builds the prefix.
+        agent1_jsonl = (
+            '{"type":"assistant","message":{"content":[{"type":"text","text":'
+            '"<handoff>{\\\"plan\\\":\\\"implement feature X\\\"}\\n</handoff>"}]}}\n'
+        )
+        responses = [
+            _fake_completed_process(returncode=0, stdout=agent1_jsonl),
+            _fake_completed_process(returncode=0, stdout='{"type":"result"}\n'),
+        ]
+
+        runner = StepRunner(work_dir=tmp_path, quality_gate=mock_gate)
+        with patch("orchestrator.subprocess.run", side_effect=responses):
+            runner.run_step(step)
+
+        # Locate agent-2's prompt audit file
+        prompt_files = list(tmp_path.rglob("agent-2-python-reviewer.prompt.txt"))
+        assert len(prompt_files) == 1, (
+            f"Expected agent-2-python-reviewer.prompt.txt under {tmp_path}, "
+            f"found: {[str(f) for f in tmp_path.rglob('*.prompt.txt')]}"
+        )
+        agent2_prompt = prompt_files[0].read_text(encoding="utf-8")
+
+        assert agent2_prompt.startswith("[Prior HANDOFF from "), (
+            f"agent-2 prompt.txt must start with '[Prior HANDOFF from '; "
+            f"got: {agent2_prompt[:120]!r}"
+        )
+        assert MISSING_HANDOFF_PLACEHOLDER not in agent2_prompt, (
+            "agent-2 prompt.txt must NOT contain the missing-handoff placeholder; "
+            "a real HANDOFF was available from agent-1"
+        )
+
 
 # ---------------------------------------------------------------------------
 # StepRunner: crash on non-zero subprocess exit
@@ -717,3 +768,102 @@ class TestRunPlanIntegration:
         warnings = summary["steps"][0]["stderr_warnings"]
         assert len(warnings) == 1
         assert "non-empty stderr" in warnings[0]
+
+
+# ---------------------------------------------------------------------------
+# ProcessRunner: prompt audit trail (step-11 fix, plan §5.4)
+# ---------------------------------------------------------------------------
+
+
+class TestProcessRunnerPromptAudit:
+    """ProcessRunner.run() must write the full prompt to disk BEFORE subprocess.run.
+
+    This provides an audit trail so HANDOFF splice content can be inspected
+    via plain ``cat`` without parsing stream-json (plan §5.4 decision row).
+    """
+
+    def test_prompt_file_exists_after_run(self, tmp_path: Path) -> None:
+        """agent-{K}-{name}.prompt.txt must exist in work_dir after run()."""
+        runner = ProcessRunner()
+        with patch(
+            "orchestrator.subprocess.run",
+            return_value=_fake_completed_process(),
+        ):
+            result = runner.run(
+                prompt="audit me",
+                work_dir=tmp_path,
+                agent_name="tdd-guide",
+                agent_index=1,
+            )
+
+        assert result.prompt_path.exists(), (
+            f"prompt audit file missing: {result.prompt_path}"
+        )
+
+    def test_prompt_file_contains_exact_prompt(self, tmp_path: Path) -> None:
+        """prompt.txt content must be byte-for-byte identical to the prompt arg."""
+        runner = ProcessRunner()
+        the_prompt = "[Prior HANDOFF from planner: {\"plan\":\"do stuff\"}] Now implement."
+        with patch(
+            "orchestrator.subprocess.run",
+            return_value=_fake_completed_process(),
+        ):
+            result = runner.run(
+                prompt=the_prompt,
+                work_dir=tmp_path,
+                agent_name="tdd-guide",
+                agent_index=2,
+            )
+
+        actual = result.prompt_path.read_text(encoding="utf-8")
+        assert actual == the_prompt, (
+            f"prompt.txt content mismatch.\n"
+            f"  expected: {the_prompt!r}\n"
+            f"  got:      {actual!r}"
+        )
+
+    def test_prompt_file_naming_convention(self, tmp_path: Path) -> None:
+        """File must be named agent-{index}-{name}.prompt.txt."""
+        runner = ProcessRunner()
+        with patch(
+            "orchestrator.subprocess.run",
+            return_value=_fake_completed_process(),
+        ):
+            result = runner.run(
+                prompt="hello",
+                work_dir=tmp_path,
+                agent_name="python-reviewer",
+                agent_index=3,
+            )
+
+        assert result.prompt_path.name == "agent-3-python-reviewer.prompt.txt", (
+            f"unexpected prompt_path name: {result.prompt_path.name!r}"
+        )
+
+    def test_prompt_written_before_subprocess(self, tmp_path: Path) -> None:
+        """prompt.txt must exist on disk at the moment subprocess.run is called.
+
+        This guarantees the audit file survives even if the subprocess crashes
+        or is killed mid-run.
+        """
+        runner = ProcessRunner()
+        prompt_existed_during_run: list[bool] = []
+
+        def fake_run(argv: list[str], **kwargs: Any) -> MagicMock:
+            # Check whether the .prompt.txt already exists when subprocess runs
+            prompt_files = list(tmp_path.rglob("*.prompt.txt"))
+            prompt_existed_during_run.append(len(prompt_files) > 0)
+            return _fake_completed_process()
+
+        with patch("orchestrator.subprocess.run", side_effect=fake_run):
+            runner.run(
+                prompt="must be pre-written",
+                work_dir=tmp_path,
+                agent_name="tdd-guide",
+                agent_index=1,
+            )
+
+        assert prompt_existed_during_run == [True], (
+            "prompt.txt was NOT written before subprocess.run was called; "
+            "audit trail would be missing if subprocess crashes"
+        )

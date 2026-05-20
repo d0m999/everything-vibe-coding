@@ -50,7 +50,7 @@ flowchart TD
 ```
 Agent(
   subagent_type="tdd-guide",
-  prompt="[Plan: docs/demo-plan.md#step-1] 在 tools/demo/util.py 创建并实现 add(a: int, b: int) -> int 加法函数；先以 pytest 写正常 / 0 / 负数 / 大数场景的失败测试再编写实现，确保后续测试步骤可直接 import。Acceptance: 函数签名严格为 add(a: int, b: int) -> int 且返回两数之和；正数+正数、含 0、负数、大数加法结果均正确；tools/demo/util.py 文件存在且可被 import。End with a HANDOFF block summarizing scope|risks|test plan|next-agent-input."
+  prompt="[Plan: docs/demo-plan.md#step-1] 在 tools/demo/util.py 创建并实现 add(a: int, b: int) -> int 加法函数；先以 pytest 写正常 / 0 / 负数 / 大数场景的失败测试再编写实现，确保后续测试步骤可直接 import。Acceptance: 函数签名严格为 add(a: int, b: int) -> int 且返回两数之和；正数+正数、含 0、负数、大数加法结果均正确；tools/demo/util.py 文件存在且可被 import。End with a literal <handoff>{...}</handoff> block — a single JSON object with keys scope, risks (array of strings), test-plan, next-agent-input. The <handoff></handoff> tags are mandatory; do NOT use markdown headings or a pipe list."
 )
 ```
 
@@ -58,7 +58,7 @@ Agent(
 ```
 Agent(
   subagent_type="python-reviewer",
-  prompt="[Plan: docs/demo-plan.md#step-1] [Prior HANDOFF from tdd-guide: <pass through>] 审查 tools/demo/util.py 中 add 函数的 Python 风格、类型注解与正确性。Acceptance: 符合 PEP 8 与项目 ruff 配置（E/F/I/B/UP）；类型注解完整且与 add(a: int, b: int) -> int 一致；无反 Pythonic 写法、无隐藏副作用、无对计划之外行为的扩张。End with an updated HANDOFF block."
+  prompt="[Plan: docs/demo-plan.md#step-1] [Prior HANDOFF from tdd-guide: <pass through>] 审查 tools/demo/util.py 中 add 函数的 Python 风格、类型注解与正确性。Acceptance: 符合 PEP 8 与项目 ruff 配置（E/F/I/B/UP）；类型注解完整且与 add(a: int, b: int) -> int 一致；无反 Pythonic 写法、无隐藏副作用、无对计划之外行为的扩张。End with an updated <handoff>{...}</handoff> block (same JSON keys: scope, risks, test-plan, next-agent-input; literal tags mandatory)."
 )
 ```
 
@@ -76,7 +76,7 @@ Agent(
 ```
 Agent(
   subagent_type="tdd-guide",
-  prompt="[Plan: docs/demo-plan.md#step-2] 为 tools/demo/util.py 的 add 函数编写 pytest 单元测试，落到 tests/demo/test_util.py，并验证覆盖率。Acceptance: pytest 可直接运行 tests/demo/test_util.py；用例数 ≥5，覆盖正数+正数、含 0、负数、边界（含极端正/负值）、大数加法场景；coverage ≥95%；所有用例通过。End with a HANDOFF block summarizing scope|risks|test plan|next-agent-input."
+  prompt="[Plan: docs/demo-plan.md#step-2] 为 tools/demo/util.py 的 add 函数编写 pytest 单元测试，落到 tests/demo/test_util.py，并验证覆盖率。Acceptance: pytest 可直接运行 tests/demo/test_util.py；用例数 ≥5，覆盖正数+正数、含 0、负数、边界（含极端正/负值）、大数加法场景；coverage ≥95%；所有用例通过。End with a literal <handoff>{...}</handoff> block — a single JSON object with keys scope, risks (array of strings), test-plan, next-agent-input. The <handoff></handoff> tags are mandatory; do NOT use markdown headings or a pipe list."
 )
 ```
 
@@ -84,7 +84,7 @@ Agent(
 ```
 Agent(
   subagent_type="python-reviewer",
-  prompt="[Plan: docs/demo-plan.md#step-2] [Prior HANDOFF from tdd-guide: <pass through>] 审查 tests/demo/test_util.py 的 pytest 测试代码质量。Acceptance: 测试命名清晰对应行为；断言精确（避免泛断言）；用 parametrize 合并相似用例减少重复；边界场景被显式覆盖；执行后用例全通过且 coverage 仍 ≥95%。End with an updated HANDOFF block."
+  prompt="[Plan: docs/demo-plan.md#step-2] [Prior HANDOFF from tdd-guide: <pass through>] 审查 tests/demo/test_util.py 的 pytest 测试代码质量。Acceptance: 测试命名清晰对应行为；断言精确（避免泛断言）；用 parametrize 合并相似用例减少重复；边界场景被显式覆盖；执行后用例全通过且 coverage 仍 ≥95%。End with an updated <handoff>{...}</handoff> block (same JSON keys: scope, risks, test-plan, next-agent-input; literal tags mandatory)."
 )
 ```
 

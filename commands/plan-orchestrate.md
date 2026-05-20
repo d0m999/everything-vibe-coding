@@ -60,6 +60,23 @@ Each Agent block represents one agent. A sequential chain of N agents emits as N
 - Agent names come from the catalogue in this skill. **Always bare names**, never prefixed. This repo installs agents at `~/.claude/agents/<name>.md` via symlink — there is no plugin namespace to prefix.
 - `prompt` is a single-line double-quoted string. Embedded double quotes are escaped as `\"`. No literal newlines inside the string.
 
+## HANDOFF block format (required — orchestrator contract)
+
+The `tools/orchestrator.py` harness extracts HANDOFF context by regex-scanning each agent's transcript for a literal `<handoff>...</handoff>` block whose inner content is a **single valid JSON object**. A markdown-style summary (headings like "Scope" / "Risks", or a `scope|risks|...` pipe list) is NOT extractable: the extractor falls back to a placeholder and the chain silently degrades to a sequential single-agent run. Therefore every emitted prompt MUST instruct the agent to end with the tagged-JSON form — never prose, never markdown headings.
+
+Required shape (the literal `<handoff>` / `</handoff>` tags are mandatory): `<handoff>{"scope":"…","risks":["…"],"test-plan":"…","next-agent-input":"…"}</handoff>`
+
+JSON keys (all required; mirror `tools/HANDOFF.schema.json`):
+- `scope` (string) — what this agent was asked to do, one sentence.
+- `risks` (array of strings) — caveats the next agent must know.
+- `test-plan` (string) — how the agent verified its output (tests run, coverage, manual checks).
+- `next-agent-input` (string) — concrete context the next agent needs (files changed, exported symbols, known issues).
+
+Standard prompt-tail directives — append verbatim to each agent's prompt (single-line; escape `"` as `\"`):
+- First agent: `End with a literal <handoff>{...}</handoff> block — a single JSON object with keys scope, risks (array of strings), test-plan, next-agent-input. The <handoff></handoff> tags are mandatory; do NOT use markdown headings or a pipe list.`
+- Non-first agent: `End with an updated <handoff>{...}</handoff> block (same JSON keys: scope, risks, test-plan, next-agent-input; literal tags mandatory).`
+- Final agent: `End with a final <handoff>{...}</handoff> block (same JSON keys; literal tags mandatory).`
+
 ## Available agent catalogue (must pick from these)
 
 Implementation / planning / refactor:
@@ -278,7 +295,7 @@ If a cycle was detected, add a `⚠️ Cycle:` line listing the members and the 
 ```
 Agent(
   subagent_type="tdd-guide",
-  prompt="[Plan: docs/foo.md#step-1] <compressed task description>; Acceptance: <1–3 items>; Out of scope: <…>; End with a HANDOFF block summarizing scope|risks|test plan|next-agent-input."
+  prompt="[Plan: docs/foo.md#step-1] <compressed task description>; Acceptance: <1–3 items>; Out of scope: <…>; End with a literal <handoff>{...}</handoff> block — a single JSON object with keys scope, risks (array of strings), test-plan, next-agent-input. The <handoff></handoff> tags are mandatory; do NOT use markdown headings or a pipe list."
 )
 ```
 
@@ -286,7 +303,7 @@ Agent(
 ```
 Agent(
   subagent_type="database-reviewer",
-  prompt="[Plan: docs/foo.md#step-1] [Prior HANDOFF from tdd-guide: <pass through>] <compressed task description from the reviewer's lens>; Acceptance: <1–3 items>; End with an updated HANDOFF block."
+  prompt="[Plan: docs/foo.md#step-1] [Prior HANDOFF from tdd-guide: <pass through>] <compressed task description from the reviewer's lens>; Acceptance: <1–3 items>; End with an updated <handoff>{...}</handoff> block (same JSON keys: scope, risks, test-plan, next-agent-input; literal tags mandatory)."
 )
 ```
 
@@ -294,7 +311,7 @@ Agent(
 ```
 Agent(
   subagent_type="swift-reviewer",
-  prompt="[Plan: docs/foo.md#step-1] [Prior HANDOFF from database-reviewer: <pass through>] <reviewer task>; Acceptance: <1–3 items>; End with a final HANDOFF block."
+  prompt="[Plan: docs/foo.md#step-1] [Prior HANDOFF from database-reviewer: <pass through>] <reviewer task>; Acceptance: <1–3 items>; End with a final <handoff>{...}</handoff> block (same JSON keys; literal tags mandatory)."
 )
 ```
 `````
@@ -312,7 +329,7 @@ No "Batch execution" block — each step block already is its own paste unit; cr
 - [ ] No invented `--mode` / `--gate` / `--agents=...` fields, and no Agent tool arguments other than `subagent_type` and `prompt`.
 - [ ] Each Agent block's `prompt` is a single-line double-quoted string with embedded `"` escaped as `\"` and no literal newlines.
 - [ ] Each prompt begins with `[Plan: <path>#step-<id>]` and includes Acceptance (1–3 items). The `Out of scope:` clause is present only when inherited from the plan.
-- [ ] First agent in a chain ends its prompt with `End with a HANDOFF block summarizing …`.
+- [ ] First agent in a chain ends its prompt with the literal-`<handoff>{...}</handoff>`-JSON directive (keys: scope, risks[], test-plan, next-agent-input) — see "HANDOFF block format". Never a markdown summary or pipe list.
 - [ ] Each non-first agent's prompt opens with `[Prior HANDOFF from <prev-agent>: <pass through>]`.
 - [ ] No duplicate agent in any chain after Phase 2 dedup.
 - [ ] Chain length ≤ 4 ⇒ ≤ 4 Agent blocks per step.
@@ -360,7 +377,7 @@ Excerpt of expected output:
 ```
 Agent(
   subagent_type="tdd-guide",
-  prompt="[Plan: docs/plan/profile-sync.md#step-3] Implement encrypted CoreData store for UserProfile with field-level AES-GCM encryption for birthDate and location; migration from UserDefaults; key from Keychain. Acceptance: encrypt/decrypt roundtrip XCTests pass; migration is idempotent and downgrade-safe; no plaintext in the SQLite file after migration. Out of scope: server-side sync conflicts. End with a HANDOFF block summarizing scope|risks|test plan|migration plan|reviewer-focus."
+  prompt="[Plan: docs/plan/profile-sync.md#step-3] Implement encrypted CoreData store for UserProfile with field-level AES-GCM encryption for birthDate and location; migration from UserDefaults; key from Keychain. Acceptance: encrypt/decrypt roundtrip XCTests pass; migration is idempotent and downgrade-safe; no plaintext in the SQLite file after migration. Out of scope: server-side sync conflicts. End with a literal <handoff>{...}</handoff> block — a single JSON object with keys scope, risks (array of strings), test-plan, next-agent-input. The <handoff></handoff> tags are mandatory; do NOT use markdown headings or a pipe list."
 )
 ```
 
@@ -368,7 +385,7 @@ Agent(
 ```
 Agent(
   subagent_type="database-reviewer",
-  prompt="[Plan: docs/plan/profile-sync.md#step-3] [Prior HANDOFF from tdd-guide: <pass through>] Review CoreData migration safety on production schema; Acceptance: migration is idempotent; downgrade leaves no orphan columns; encryption-at-rest preserved across migration; End with an updated HANDOFF block."
+  prompt="[Plan: docs/plan/profile-sync.md#step-3] [Prior HANDOFF from tdd-guide: <pass through>] Review CoreData migration safety on production schema; Acceptance: migration is idempotent; downgrade leaves no orphan columns; encryption-at-rest preserved across migration; End with an updated <handoff>{...}</handoff> block (same JSON keys: scope, risks, test-plan, next-agent-input; literal tags mandatory)."
 )
 ```
 
@@ -376,7 +393,7 @@ Agent(
 ```
 Agent(
   subagent_type="swift-reviewer",
-  prompt="[Plan: docs/plan/profile-sync.md#step-3] [Prior HANDOFF from database-reviewer: <pass through>] Review the Swift implementation for actor isolation, value semantics, and Swift Concurrency 6.2 idioms; Acceptance: no data races flagged by strict concurrency checker; encryption type is Sendable; descriptors documented; End with an updated HANDOFF block."
+  prompt="[Plan: docs/plan/profile-sync.md#step-3] [Prior HANDOFF from database-reviewer: <pass through>] Review the Swift implementation for actor isolation, value semantics, and Swift Concurrency 6.2 idioms; Acceptance: no data races flagged by strict concurrency checker; encryption type is Sendable; descriptors documented; End with an updated <handoff>{...}</handoff> block (same JSON keys: scope, risks, test-plan, next-agent-input; literal tags mandatory)."
 )
 ```
 
@@ -384,7 +401,7 @@ Agent(
 ```
 Agent(
   subagent_type="security-reviewer",
-  prompt="[Plan: docs/plan/profile-sync.md#step-3] [Prior HANDOFF from swift-reviewer: <pass through>] Security audit of the encryption flow; Acceptance: key never logged or serialized; AES-GCM nonce uniqueness verified across migration; key rotation path documented; End with a final HANDOFF block."
+  prompt="[Plan: docs/plan/profile-sync.md#step-3] [Prior HANDOFF from swift-reviewer: <pass through>] Security audit of the encryption flow; Acceptance: key never logged or serialized; AES-GCM nonce uniqueness verified across migration; key rotation path documented; End with a final <handoff>{...}</handoff> block (same JSON keys; literal tags mandatory)."
 )
 ```
 `````
