@@ -113,9 +113,10 @@
   - 用测试锁定 contract，避免未来无意中"放宽"
 - **Cons**：
   - 若 future spec 真要允许混入示例 fence，得改 regex 为更窄的 `r"\`\`\`(?:Agent|)\s*\n(.*?)\`\`\`"` 之类
-- **Context**：来自 fix-pass code-reviewer（2026-05-19）的 MEDIUM finding。`tools/plan_md_to_json.py:159-179`。
+- **Context**：来自 fix-pass code-reviewer（2026-05-19）的 MEDIUM finding。`tools/plan_md_to_json.py:159-179`。也对应 codex review（2026-05-20）#6。
 - **Priority**: P3
 - **Effort estimate**: CC ~20 分钟
+- **Status**: ✅ 已解决（2026-05-20）。`_extract_agent_fences` docstring 写明"step body 只允许 Agent fence、非 Agent 块 fail-loud"约束 + 改进 ParseError 措辞；`test_non_agent_code_block_in_step_raises` 锁定该 contract（含 ```bash 块的 step 触发 ParseError）。维持严格 fail-loud（非放宽 regex），与项目反静默失败取向一致。
 
 ---
 
@@ -159,3 +160,36 @@
 - **Context**：fix-pass code-reviewer（2026-05-19）LOW，pre-existing 技术债，与本轮 fix 无关。
 - **Priority**: P4
 - **Effort estimate**: CC ~10 分钟
+
+---
+
+## T-FUTURE-11 — `handoff_extractor` 按 HANDOFF.schema.json 校验 4 键
+
+- **What**：`extract_handoff()` 当前只 `json.loads` → `json.dumps` 透传（`tools/handoff_extractor.py:80-86`），不校验解析结果是 object、也不校验 `scope/risks/test-plan/next-agent-input` 四个必填键。考虑：解析后用 `HANDOFF.schema.json`（`required` + `additionalProperties:false`）做一次 jsonschema 校验，不合规时回退 `MISSING_HANDOFF_PLACEHOLDER`（或附 warning），而非把结构错误的 handoff 当成功透传。
+- **Why**：schema 声明了 4 键契约，但运行期从不强制。`<handoff>42</handoff>` / `<handoff>{"foo":1}</handoff>` 等都会被当成功 handoff 串链。
+- **Pros**：
+  - schema↔extractor↔skill directive 三方真正一致（目前 schema 仅被 `plan_md_to_json` 用来读常量）
+  - 给 T-FUTURE-2（reviewer 结构化 findings）铺路
+- **Cons**：
+  - 引入 `jsonschema` 依赖（当前 `dependencies = []`）或手写校验
+  - MVP 下 HANDOFF 只作不透明上下文注入下游 prompt（LLM 读，不解析字段），坏 handoff 只降质不崩溃 —— severity 实为 P2
+- **Context**：codex review（2026-05-20）#1，标 P1；claude 复核降为 P2（仅降质不崩）。隔壁 /review（2026-05-20）④ 同样判定"MVP 可接受"延后。`tools/handoff_extractor.py:80-86`、`tools/HANDOFF.schema.json:11-13`。
+- **触发条件**：当 HANDOFF 开始被机器解析字段（而非纯文本注入）时必须先做。
+- **Priority**: P2
+- **Effort estimate**: CC ~30 分钟
+
+---
+
+## T-FUTURE-12 — schema 资源随包分发（package-data）
+
+- **What**：`tools/plan_md_to_json.py:22-24` 在 import 期硬读 `HANDOFF.schema.json`，但 `tools/pyproject.toml:35-36` 仅声明 `py-modules`，未声明 schema JSON 的打包策略（`package-data` / `data-files` / `MANIFEST.in`）。若改为构建 wheel/sdist 分发，JSON 会缺失，`plan_md_to_json`（及依赖其常量的 `handoff_extractor`）import 期即崩。
+- **Why**：消除"打成包就崩"的潜伏债。
+- **Pros**：
+  - 真正可分发（`pip install` 后可用）
+  - import 期资源加载有保障
+- **Cons**：
+  - 当前无任何分发路径（`cd tools && pytest` 原地跑、`version=0.0.0`），改动是纯预防
+- **Context**：codex review（2026-05-20）#3，标 P1；claude 复核降为 P2/P3 —— 源码/editable 运行下 `Path(__file__).with_name()` 永远命中，仅构建分发时才崩，而项目目前不分发。
+- **触发条件**：当决定把 orchestrator-tools 打包发布（或 editable 之外的安装方式）时再做。
+- **Priority**: P3
+- **Effort estimate**: CC ~15 分钟

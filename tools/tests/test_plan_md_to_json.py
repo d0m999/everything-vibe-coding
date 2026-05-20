@@ -324,6 +324,54 @@ Agent(
         with pytest.raises(ParseError, match="[Aa]gent|subagent_type"):
             parse(md)
 
+    def test_non_agent_code_block_in_step_raises(self) -> None:
+        """A stray non-Agent fenced block in a step body fails loud (T-FUTURE-7).
+
+        A step body may contain ONLY Agent(...) fences. A ```bash / ```json /
+        ```mermaid block inside a step is a structural error even when a valid
+        Agent fence is also present — it must raise, not be silently skipped.
+        """
+        md = """\
+# Plan-Orchestrate Result
+
+**Plan**: `docs/demo-plan.md`
+**Lang**: `python`
+**Steps**: 1
+**Scope**: all
+
+## Steps overview
+
+| # | Title | Tags | Chain |
+|---|---|---|---|
+| 1 | foo | impl | chain |
+
+---
+
+## Step 1 — foo
+
+**Intent**: foo.
+**Tags**: impl
+**Chain rationale**: chain.
+
+### Agents
+
+1.
+```
+Agent(
+  subagent_type="tdd-guide",
+  prompt="[Plan: docs/demo-plan.md#step-1] implement. End with HANDOFF."
+)
+```
+
+```bash
+echo "this illustrative block does not belong in a step body"
+```
+
+---
+"""
+        with pytest.raises(ParseError, match="subagent_type"):
+            parse(md)
+
 
 # ===========================================================================
 # 5b2 — New tests

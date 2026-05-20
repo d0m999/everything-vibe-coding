@@ -153,18 +153,30 @@ def _parse_meta(body: str) -> MetaBlock:
 
 
 def _extract_agent_fences(step_text: str, step_id: int) -> list[AgentEntry]:
-    """Extract all Agent(...) fences from a step block text."""
-    # Use module-level _RE_AGENT_FENCE which accepts an optional language tag
-    # (e.g. ```Agent or ```text) after the opening triple-backticks.
+    """Extract all Agent(...) fences from a step block text.
+
+    Contract (intentional; locked by test): a step body may contain ONLY
+    Agent(...) fences. ``_RE_AGENT_FENCE`` captures *every* triple-backtick
+    fence in ``step_text`` — the optional language tag after the opening
+    backticks is allowed (e.g. ``` ```Agent ```), so a stray non-Agent block
+    (``` ```bash ```, ``` ```json ```, ``` ```mermaid ```) is also captured and
+    then rejected because it lacks ``subagent_type=``. This is fail-loud by
+    design: keep illustrative code/diagram blocks OUT of step bodies (put them
+    in the overview / parallel-graph sections, which are not scanned here).
+    """
     fences = _RE_AGENT_FENCE.findall(step_text)
 
     agents: list[AgentEntry] = []
     for fence_content in fences:
-        # Must contain subagent_type
+        # Every captured fence MUST be an Agent(...) call carrying subagent_type.
+        # A fence without it is either a malformed Agent call or a stray
+        # non-Agent code block — both are structural errors here (see contract).
         m_name = _RE_SUBAGENT_TYPE.search(fence_content)
         if not m_name:
             raise ParseError(
-                f"Step {step_id}: Agent fence found but missing 'subagent_type' field. "
+                f"Step {step_id}: fenced block is missing the 'subagent_type' field. "
+                "A step body may contain only Agent(...) fences — move any "
+                "illustrative code or diagram blocks out of the step. "
                 f"Snippet: {fence_content[:120]!r}"
             )
         name = m_name.group(1)
@@ -181,7 +193,12 @@ def _extract_agent_fences(step_text: str, step_id: int) -> list[AgentEntry]:
 
 
 def _extract_prompt(fence_content: str, step_id: int) -> str:
-    """Extract the prompt= value, handling \\\" escapes safely via ast.literal_eval."""
+    """Extract the prompt= value via a char-by-char state machine.
+
+    Walks the quoted string handling ``\\"`` / ``\\n`` / ``\\\\`` escapes
+    explicitly (no ``ast.literal_eval`` / no greedy regex) so multi-line
+    prompts with embedded escaped quotes are recovered faithfully.
+    """
     # Locate  prompt="..."  where the value may span multiple lines and contain \"
     # Strategy: find `prompt=` then grab the opening quote, then walk char-by-char.
     idx = fence_content.find('prompt=')

@@ -6,8 +6,10 @@ extract_handoff(jsonl_text: str) -> str
     Scan a stream-json JSONL transcript and return the last <handoff>...</handoff>
     block found across all assistant turns.
 
-    Returns MISSING_HANDOFF_PLACEHOLDER when no block is found or on any parse
-    error (malformed JSON line, invalid JSON inside the tag, etc.).
+    Returns MISSING_HANDOFF_PLACEHOLDER when no <handoff> block is found across
+    all assistant turns, or when the last block's inner content is not valid
+    JSON. Malformed JSONL transcript lines are skipped (scanning continues) —
+    they are NOT a placeholder trigger on their own.
 """
 
 from __future__ import annotations
@@ -32,8 +34,9 @@ def extract_handoff(jsonl_text: str) -> str:
     str
         The compactly re-serialized JSON string inside the last
         ``<handoff>...</handoff>`` block found across ALL ``type=assistant``
-        events, or ``MISSING_HANDOFF_PLACEHOLDER`` if no block is found or any
-        parse error occurs.
+        events, or ``MISSING_HANDOFF_PLACEHOLDER`` if no block is found or the
+        last block's inner content is not valid JSON. Malformed transcript
+        lines are skipped (step 2 below), not a placeholder trigger.
 
     Algorithm
     ---------
