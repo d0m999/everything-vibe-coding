@@ -1,4 +1,3 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from skills/prompt-optimizer/SKILL.md -->
 ---
 name: prompt-optimizer
 description: >-
@@ -18,6 +17,7 @@ metadata:
   author: YannJY02
   version: "1.0.0"
 ---
+<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from skills/prompt-optimizer/SKILL.md -->
 
 # Prompt Optimizer
 

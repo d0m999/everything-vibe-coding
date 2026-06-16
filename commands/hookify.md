@@ -1,7 +1,7 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/hookify.md -->
 ---
 description: Create hooks to prevent unwanted behaviors from conversation analysis or explicit instructions
 ---
+<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/hookify.md -->
 
 Create hook rules to prevent unwanted Claude Code behaviors by analyzing conversation patterns or explicit user instructions.
 

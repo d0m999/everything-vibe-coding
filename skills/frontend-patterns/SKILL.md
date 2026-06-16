@@ -1,9 +1,9 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from skills/frontend-patterns/SKILL.md -->
 ---
 name: frontend-patterns
 description: Frontend development patterns for React, Next.js, state management, performance optimization, and UI best practices.
 origin: ECC
 ---
+<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from skills/frontend-patterns/SKILL.md -->
 
 # Frontend Development Patterns
 

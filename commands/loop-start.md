@@ -1,7 +1,7 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/loop-start.md -->
 ---
 description: Start a managed autonomous loop pattern with safety defaults and explicit stop conditions.
 ---
+<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/loop-start.md -->
 
 # Loop Start Command
 

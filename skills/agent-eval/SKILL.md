@@ -1,10 +1,10 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from skills/agent-eval/SKILL.md -->
 ---
 name: agent-eval
 description: Head-to-head comparison of coding agents (Claude Code, Aider, Codex, etc.) on custom tasks with pass rate, cost, time, and consistency metrics
 origin: ECC
 tools: Read, Write, Edit, Bash, Grep, Glob
 ---
+<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from skills/agent-eval/SKILL.md -->
 
 # Agent Eval Skill
 

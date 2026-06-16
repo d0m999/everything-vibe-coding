@@ -1,7 +1,7 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/hookify-list.md -->
 ---
 description: List all configured hookify rules
 ---
+<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/hookify-list.md -->
 
 Find and display all hookify rules in a formatted table.
 

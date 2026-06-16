@@ -1,9 +1,9 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from skills/error-handling/SKILL.md -->
 ---
 name: error-handling
 description: Patterns for robust error handling across TypeScript, Python, and Go. Covers typed errors, error boundaries, retries, circuit breakers, and user-facing error messages.
 origin: ECC
 ---
+<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from skills/error-handling/SKILL.md -->
 
 # Error Handling Patterns
 

@@ -1,7 +1,7 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/learn.md -->
 ---
 description: Extract reusable patterns from the current session and save them as candidate skills or guidance.
 ---
+<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/learn.md -->
 
 # /learn - Extract Reusable Patterns
 

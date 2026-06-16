@@ -1,9 +1,9 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from skills/bun-runtime/SKILL.md -->
 ---
 name: bun-runtime
 description: Bun as runtime, package manager, bundler, and test runner. When to choose Bun vs Node, migration notes, and Vercel support.
 origin: ECC
 ---
+<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from skills/bun-runtime/SKILL.md -->
 
 # Bun Runtime
 

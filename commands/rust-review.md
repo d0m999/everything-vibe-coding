@@ -1,7 +1,7 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/rust-review.md -->
 ---
 description: Comprehensive Rust code review for ownership, lifetimes, error handling, unsafe usage, and idiomatic patterns. Invokes the rust-reviewer agent.
 ---
+<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/rust-review.md -->
 
 # Rust Code Review
 

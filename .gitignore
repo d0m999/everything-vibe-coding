@@ -1,5 +1,6 @@
 *.bak
 .claude/settings.local.json
+.agents/skills/evc-command-*/
 plan/
 .work/
 
@@ -10,3 +11,4 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
+.gstack/

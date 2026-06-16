@@ -1,7 +1,7 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/learn-eval.md -->
 ---
 description: "Extract reusable patterns from the session, self-evaluate quality before saving, and determine the right save location (Global vs Project)."
 ---
+<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/learn-eval.md -->
 
 # /learn-eval - Extract, Evaluate, then Save
 

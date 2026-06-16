@@ -1,8 +1,8 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/plan.md -->
 ---
 description: Restate requirements, assess risks, and create step-by-step implementation plan. WAIT for user CONFIRM before touching any code.
 argument-hint: "[feature description | path/to/*.prd.md]"
 ---
+<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/plan.md -->
 
 # Plan Command
 

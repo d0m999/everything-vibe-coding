@@ -1,9 +1,9 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/skill-create.md -->
 ---
 name: skill-create
 description: Analyze local git history to extract coding patterns and generate SKILL.md files. Local version of the Skill Creator GitHub App.
 allowed_tools: ["Bash", "Read", "Write", "Grep", "Glob"]
 ---
+<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/skill-create.md -->
 
 # /skill-create - Local Skill Generation
 

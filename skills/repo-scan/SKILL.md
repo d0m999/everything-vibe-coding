@@ -1,9 +1,9 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from skills/repo-scan/SKILL.md -->
 ---
 name: repo-scan
 description: Cross-stack source code asset audit — classifies every file, detects embedded third-party libraries, and delivers actionable four-level verdicts per module with interactive HTML reports.
 origin: community
 ---
+<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from skills/repo-scan/SKILL.md -->
 
 # repo-scan
 

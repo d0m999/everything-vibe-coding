@@ -1,9 +1,9 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from skills/fastapi-patterns/SKILL.md -->
 ---
 name: fastapi-patterns
 description: FastAPI patterns for async APIs, dependency injection, Pydantic request and response models, OpenAPI docs, tests, security, and production readiness.
 origin: community
 ---
+<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from skills/fastapi-patterns/SKILL.md -->
 
 # FastAPI Patterns
 

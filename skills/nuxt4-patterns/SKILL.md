@@ -1,9 +1,9 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from skills/nuxt4-patterns/SKILL.md -->
 ---
 name: nuxt4-patterns
 description: Nuxt 4 app patterns for hydration safety, performance, route rules, lazy loading, and SSR-safe data fetching with useFetch and useAsyncData.
 origin: ECC
 ---
+<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from skills/nuxt4-patterns/SKILL.md -->
 
 # Nuxt 4 Patterns
 

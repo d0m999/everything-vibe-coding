@@ -1,8 +1,8 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/plan-prd.md -->
 ---
 description: "Generate a lean, problem-first PRD and hand off to /plan for implementation planning."
 argument-hint: "[product/feature idea] (blank = start with questions)"
 ---
+<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/plan-prd.md -->
 
 # PRD Command
 

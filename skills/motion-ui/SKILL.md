@@ -1,9 +1,9 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from skills/motion-ui/SKILL.md -->
 ---
 name: motion-ui
 description: "Production-ready UI motion system for React/Next.js. Use when implementing animations, transitions, or motion patterns."
 origin: ECC
 ---
+<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from skills/motion-ui/SKILL.md -->
 
 # Motion System v4.2
 

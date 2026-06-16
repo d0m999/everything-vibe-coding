@@ -1,8 +1,8 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/cost-report.md -->
 ---
 description: Generate a local Claude Code cost report from a cost-tracker SQLite database.
 argument-hint: [csv]
 ---
+<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/cost-report.md -->
 
 # Cost Report
 

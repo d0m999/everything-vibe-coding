@@ -1,9 +1,9 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/prune.md -->
 ---
 name: prune
 description: Delete pending instincts older than 30 days that were never promoted
 command: true
 ---
+<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/prune.md -->
 
 # Prune Pending Instincts
 

@@ -28,10 +28,11 @@ argument-hint: "<plan-doc-path> [plan-doc-path-2 ...] [--model sonnet|opus]"
 
 保持主路径精简。只读取需要的参考文件，不要默认全量加载：
 
-- 始终读取 `~/.claude/commands/ralph-init/references/output-contracts.md`
-- 始终读取 `~/.claude/commands/ralph-init/references/model-sizing.md`
-- 在确定需要某个非 `base` 画像的详细检查项时,读取 `~/.claude/commands/ralph-init/references/validation-profiles.md`(下方 step 2 内联了触发条件,可据此判断)
-- 仅在出现对应风险、生成结果不一致、或你需要确认历史防坑机制时读取 `~/.claude/commands/ralph-init/references/incidents.md`
+- 先确定命令资源目录：Claude Code 中通常是 `~/.claude/commands/ralph-init`；Codex 中通常是 `~/.codex/prompts/ralph-init`
+- 始终读取 `<命令资源目录>/references/output-contracts.md`
+- 始终读取 `<命令资源目录>/references/model-sizing.md`
+- 在确定需要某个非 `base` 画像的详细检查项时,读取 `<命令资源目录>/references/validation-profiles.md`(下方 step 2 内联了触发条件,可据此判断)
+- 仅在出现对应风险、生成结果不一致、或你需要确认历史防坑机制时读取 `<命令资源目录>/references/incidents.md`
 
 不要把 incident 复盘、项目特定框架检查、输出字段细则全部塞回主命令。
 
@@ -108,9 +109,9 @@ argument-hint: "<plan-doc-path> [plan-doc-path-2 ...] [--model sonnet|opus]"
 生成完成后必须运行：
 
 ```bash
-python3 ~/.claude/commands/ralph-init/scripts/validate_prd.py .ralph/prd.json
-python3 ~/.claude/commands/ralph-init/scripts/validate_prompt.py .ralph/PROMPT.md
-python3 ~/.claude/commands/ralph-init/scripts/validate_ralph.py ralph.sh
+python3 "<命令资源目录>/scripts/validate_prd.py" .ralph/prd.json
+python3 "<命令资源目录>/scripts/validate_prompt.py" .ralph/PROMPT.md
+python3 "<命令资源目录>/scripts/validate_ralph.py" ralph.sh
 ```
 
 若任一脚本失败:
@@ -121,7 +122,7 @@ python3 ~/.claude/commands/ralph-init/scripts/validate_ralph.py ralph.sh
 
 如果校验失败原因与历史事故高度一致,再去读 `references/incidents.md` 的对应章节。
 
-维护者注:修改任一 validator 后,运行 `bash ~/.claude/commands/ralph-init/scripts/run_fixtures.sh` 做回归,它会对 `scripts/fixtures/valid` 和 `scripts/fixtures/invalid` 下的 17 个样例逐一断言通过/失败。
+维护者注:修改任一 validator 后,运行 `bash "<命令资源目录>/scripts/run_fixtures.sh"` 做回归,它会对 `scripts/fixtures/valid` 和 `scripts/fixtures/invalid` 下的 17 个样例逐一断言通过/失败。
 
 ## 输出要求
 

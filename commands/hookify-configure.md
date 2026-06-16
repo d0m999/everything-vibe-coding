@@ -1,7 +1,7 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/hookify-configure.md -->
 ---
 description: Enable or disable hookify rules interactively
 ---
+<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/hookify-configure.md -->
 
 Interactively enable or disable existing hookify rules.
 

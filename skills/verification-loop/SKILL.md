@@ -1,9 +1,9 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from skills/verification-loop/SKILL.md -->
 ---
 name: verification-loop
 description: "A comprehensive verification system for Claude Code sessions."
 origin: ECC
 ---
+<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from skills/verification-loop/SKILL.md -->
 
 # Verification Loop Skill
 

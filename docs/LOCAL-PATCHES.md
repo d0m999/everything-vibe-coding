@@ -4,6 +4,15 @@
 >
 > 用途：将来从上游同步新版本时识别需要 re-apply 的修改点。
 
+## 2026-06-16 — Codex skill frontmatter 兼容
+
+| 日期 | 文件 | 修改 | 原因 |
+|---|---|---|---|
+| 2026-06-16 | `skills/*/SKILL.md` | 将首行 `<!-- Source: ... -->` 移到 YAML frontmatter 之后 | Codex 只会发现以 frontmatter 开头的 `SKILL.md`；保留来源元数据，同时让逐项 symlink 到 `~/.codex/skills` 后可被 Codex 加载 |
+| 2026-06-16 | `commands/*.md` | 将首行 `<!-- Source: ... -->` 移到 YAML frontmatter 之后 | Codex custom prompts 也需要以 frontmatter 开头；让逐项 symlink 到 `~/.codex/prompts` 后可显示描述和参数提示 |
+| 2026-06-16 | `commands/local/ralph-init.md` | 将硬编码 `~/.claude/commands/ralph-init` 改成 Claude/Codex 双路径资源目录说明 | `ralph-init` 在 Codex 中通过 `~/.codex/prompts/ralph-init` 提供参考文件和校验脚本 |
+| 2026-06-16 | `scripts/generate-codex-command-skills.sh` / `.agents/skills/evc-command-*` | 为每个 `commands/*.md` 生成 thin skill wrapper，安装到 `~/.codex/skills/evc-command-*` | Codex 的 `$` picker 只显示 skills；gstack 也是用 skill wrapper 承载 `/qa`、`/review` 这类命令感入口 |
+
 ## 2026-05-16 — v1 vendoring dangling refs 清理
 
 `scripts/check-references.sh` 扫描发现 74 个 drop 名字在 vendored 文件中被引用。按「count ≥ 2 + 有 1:1 替代品」筛选，做了 6 处 sed 替换：

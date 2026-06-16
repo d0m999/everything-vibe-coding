@@ -1,7 +1,7 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/harness-audit.md -->
 ---
 description: Run a deterministic repository harness audit and return a prioritized scorecard.
 ---
+<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/harness-audit.md -->
 
 # Harness Audit Command
 

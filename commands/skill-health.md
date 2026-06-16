@@ -1,9 +1,9 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/skill-health.md -->
 ---
 name: skill-health
 description: Show skill portfolio health dashboard with charts and analytics
 command: true
 ---
+<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/skill-health.md -->
 
 # Skill Health Dashboard
 

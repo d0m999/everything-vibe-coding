@@ -1,8 +1,8 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/code-review.md -->
 ---
 description: Code review — local uncommitted changes or GitHub PR (pass PR number/URL for PR mode)
 argument-hint: [pr-number | pr-url | blank for local review]
 ---
+<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/code-review.md -->
 
 # Code Review
 

@@ -1,7 +1,7 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/update-codemaps.md -->
 ---
 description: Scan project structure and generate token-lean architecture codemaps.
 ---
+<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/update-codemaps.md -->
 
 # Update Codemaps
 

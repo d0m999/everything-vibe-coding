@@ -1,7 +1,7 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/refactor-clean.md -->
 ---
 description: Safely identify and remove dead code with verification after each change.
 ---
+<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/refactor-clean.md -->
 
 # Refactor Clean
 

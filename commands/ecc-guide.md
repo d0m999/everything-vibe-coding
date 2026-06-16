@@ -1,7 +1,7 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/ecc-guide.md -->
 ---
 description: Navigate ECC's current agents, skills, commands, hooks, install profiles, and docs from the live repository surface.
 ---
+<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/ecc-guide.md -->
 
 # /ecc-guide
 

@@ -1,10 +1,10 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from skills/skill-comply/SKILL.md -->
 ---
 name: skill-comply
 description: Visualize whether skills, rules, and agent definitions are actually followed — auto-generates scenarios at 3 prompt strictness levels, runs agents, classifies behavioral sequences, and reports compliance rates with full tool call timelines
 origin: ECC
 tools: Read, Bash
 ---
+<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from skills/skill-comply/SKILL.md -->
 
 # skill-comply: Automated Compliance Measurement
 

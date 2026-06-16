@@ -1,9 +1,9 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from skills/gateguard/SKILL.md -->
 ---
 name: gateguard
 description: Fact-forcing gate that blocks Edit/Write/Bash (including MultiEdit) and demands concrete investigation (importers, data schemas, user instruction) before allowing the action. Measurably improves output quality by +2.25 points vs ungated agents.
 origin: community
 ---
+<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from skills/gateguard/SKILL.md -->
 
 # GateGuard — Fact-Forcing Pre-Action Gate
 

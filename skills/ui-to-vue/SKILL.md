@@ -1,9 +1,9 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from skills/ui-to-vue/SKILL.md -->
 ---
 name: ui-to-vue
 description: Use when the user has UI screenshots or design exports that need batch conversion into Vue 3 components, especially with Vant, Element Plus, or Ant Design Vue.
 origin: community
 ---
+<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from skills/ui-to-vue/SKILL.md -->
 
 # UI To Vue
 

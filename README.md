@@ -51,9 +51,19 @@ ecc 太全 — 500+ skills、几十个 agent、覆盖几十种技术栈。对我
 ./install.sh --backup     # 安装前把 ~/.claude/ 备份到 ~/.claude.bak-<ts>/
 ```
 
+Codex 安装 skills，并把 commands 生成成 Codex skill wrappers：
+
+```bash
+./install-codex.sh          # dry-run，预览写入 ~/.codex/skills/ 的内容
+./install-codex.sh --apply  # 逐项 symlink skills，并生成/链接 command wrappers
+```
+
+Codex 的 `$` skill picker 会显示 command 名，例如 `commands/code-review.md` 对应 `$code-review`，`commands/local/ralph-init.md` 对应 `$ralph-init`。`~/.codex/prompts` 也会保留一份兼容链接，但它不是主要入口。
+
 设计要点：
 
 - **逐项 symlink**（不是整个目录 symlink）。这样 `~/.claude/skills/` 下既可以放本 repo 管理的 skill，也容得下临时、未纳入 repo 的内容。
+- **Codex 也逐项 symlink** 到 `$CODEX_HOME/skills`（默认 `~/.codex/skills`），并为 `commands/*.md` 生成 `.agents/skills/evc-command-*` wrapper 后链接进去，避免覆盖 Codex 自带的 `.system` skills 和其他本地安装项。
 - **同名冲突给提示、不静默覆盖**。已存在的目标会列出来，需要 `--force` 才覆盖。
 - **`attic/` 不参与 install**。
 

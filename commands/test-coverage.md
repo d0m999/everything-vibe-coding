@@ -1,7 +1,7 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/test-coverage.md -->
 ---
 description: Analyze coverage, identify gaps, and generate missing tests toward the target threshold.
 ---
+<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/test-coverage.md -->
 
 # Test Coverage
 

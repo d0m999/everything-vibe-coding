@@ -1,7 +1,7 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/model-route.md -->
 ---
 description: Recommend the best model tier for the current task based on complexity, risk, and budget.
 ---
+<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/model-route.md -->
 
 # Model Route Command
 

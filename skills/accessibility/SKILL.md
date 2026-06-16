@@ -1,10 +1,10 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from skills/accessibility/SKILL.md -->
 ---
 name: accessibility
 description: Design, implement, and audit inclusive digital products using WCAG 2.2 Level AA
   standards. Use this skill to generate semantic ARIA for Web and accessibility traits for Web and Native platforms (iOS/Android).
 origin: ECC
 ---
+<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from skills/accessibility/SKILL.md -->
 
 # Accessibility (WCAG 2.2)
 

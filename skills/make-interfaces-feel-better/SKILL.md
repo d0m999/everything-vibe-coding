@@ -1,9 +1,9 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from skills/make-interfaces-feel-better/SKILL.md -->
 ---
 name: make-interfaces-feel-better
 description: Apply concrete design-engineering details that make interfaces feel polished. Use when reviewing or improving UI spacing, typography, borders, shadows, motion, hit areas, icons, text wrapping, and interaction states.
 origin: community
 ---
+<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from skills/make-interfaces-feel-better/SKILL.md -->
 
 # Make Interfaces Feel Better
 

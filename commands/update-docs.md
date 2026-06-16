@@ -1,7 +1,7 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/update-docs.md -->
 ---
 description: Sync documentation from source-of-truth files such as scripts, schemas, routes, and exports.
 ---
+<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/update-docs.md -->
 
 # Update Documentation
 

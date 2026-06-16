@@ -1,7 +1,7 @@
-<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/loop-status.md -->
 ---
 description: Inspect active loop state, progress, failure signals, and recommended intervention.
 ---
+<!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/loop-status.md -->
 
 # Loop Status Command
 
