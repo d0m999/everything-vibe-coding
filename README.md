@@ -28,7 +28,7 @@ ecc 太全 — 500+ skills、几十个 agent、覆盖几十种技术栈。对我
 .
 ├── README.md
 ├── install.sh                # 逐项 symlink 到 ~/.claude/
-├── skills/                   # 启用的 skills（含 local/ 子目录放原创）
+├── skills/                   # 启用的 skills（含本地原创；一层目录参与 install）
 ├── agents/                   # 启用的 agents
 ├── commands/                 # 启用的 commands
 ├── hooks/                    # 启用的 hooks
@@ -116,7 +116,7 @@ v1 白名单不是一次性凭印象列出来，而是分阶段问答生成：
 
 ### 我自己写的（原创）
 
-放进对应分类的 `local/` 子目录（`skills/local/` 等），与 vendored 内容隔开。原创内容不需要 SOURCES 记录，但要在 `CHANGELOG.md` 提一句。
+放进参与安装的对应目录。Claude/Codex skills 放 `skills/<name>/`（一层目录，确保 `install.sh` / `install-codex.sh` 能发现）；commands 这类需要与 upstream 区分的内容可放 `commands/local/`。原创内容不需要 SOURCES 记录，但要在 `docs/SELECTION-v1.md` / `docs/VENDORING-MANIFEST.md` 记录为本地原创；如果存在 `CHANGELOG.md`，也在顶部加一行。
 
 ### 本地补丁（对 vendored 内容的修改）
 
@@ -153,7 +153,8 @@ YYYY-MM-DD  add|drop|patch|sync  <path>  <一句话说明>
 
 ## 当前状态
 
-- [x] v1 问卷完成 → `docs/SELECTION-v1.md`（keep **135 项** / drop ~360+ 项，agents 31 / skills 73 / commands 31 = 29 from ecc + 1 fork + 1 原创）
+- [x] v1 问卷完成 → `docs/SELECTION-v1.md`（v1 keep **135 项** / drop ~360+ 项，agents 31 / skills 73 / commands 31 = 29 from ecc + 1 fork + 1 原创）
+- [x] post-v1 本地原创 skill `video-extract` 纳入 `skills/video-extract/`（当前 skills 74；用于视频内容抽取、字幕/转写、YouTube 403/SABR/PO-token 浏览器兜底）
 - [x] vendoring manifest review 完成 → `docs/VENDORING-MANIFEST.md`（2026-05-16 用户确认 6/6 项）
 - [x] `scripts/vendor-from-ecc.sh` 完成
 - [x] `scripts/check-references.sh` 完成（识别 74 个 drop name 提及，按 count≥2+1:1替代品 筛选 fix 了 6 处 `architect`/`e2e-runner`，其余在 `docs/LOCAL-PATCHES.md` 留底）

@@ -1,6 +1,6 @@
 # Vendoring Manifest
 
-> v1 候选从 ecc plugin 一次性复制到本 repo 的清单。一次落地后由 `scripts/vendor-from-ecc.sh` 维护，重跑 idempotent。
+> v1 候选从 ecc plugin 一次性复制到本 repo 的清单。一次落地后由 `scripts/vendor-from-ecc.sh` 维护，重跑 idempotent。post-v1 本地原创项单独记录，不改变 v1 基线含义。
 >
 > **基线**：ecc plugin `2.0.0-rc.1`（marketplace 路径 `~/.claude/plugins/marketplaces/ecc/`）
 > **生成日期**：2026-05-16
@@ -25,6 +25,10 @@
 
 - `plan-orchestrate` (command) — **fork user-level 版** (`~/.claude/commands/plan-orchestrate.md`) 到本 repo `commands/plan-orchestrate.md`，按 bare 架构改写。ecc 版（输出 `/orchestrate` 调用块）不 vendor。install.sh 时先 `.bak.<ts>` user-level 默认再覆盖。
 - `ralph-init` (command + 子目录树) — **用户原创工具**，vendor 到 `commands/local/ralph-init.md` + `commands/local/ralph-init/`（30 文件、~144KB，含 references/、scripts/、scripts/fixtures/{valid,invalid}/）。install.sh 用 symlink 还原硬编码路径 `~/.claude/commands/ralph-init/`。
+
+Post-v1 本地原创项：
+
+- `video-extract` (skill) — **本地原创 skill**，源 `~/.claude/skills/video-extract/`，纳入本 repo `skills/video-extract/`。用途：视频内容抽取、字幕/转写、YouTube 403 / SABR / PO-token 时的真实浏览器播放、跳帧截图与音频兜底。它不是 ecc vendor 项，不写 `Source: ecc...` 注释。
 
 ## 归类修正（v1 selection 阶段错误）
 
@@ -130,6 +134,14 @@ strategic-compact
 skill-comply    skill-scout    skill-stocktake
 ```
 
+## Post-v1 本地原创 Skills（1）
+
+```
+video-extract       → 源 ~/.claude/skills/video-extract/
+                    → 目标 skills/video-extract/
+                    → 10 文件，含 SKILL.md、reference/gotchas.md、scripts/{7 sh + 1 js}
+```
+
 ## Commands（29 from ecc + 1 fork + 1 原创 = 31）
 
 **from ecc (29)** —— 全部 v1 keep commands 都在 ecc `commands/` 目录里（ecc 的 plan-orchestrate 实际是 skill，不在此列）：
@@ -166,12 +178,21 @@ ralph-init          → 源 ~/.claude/commands/ralph-init.md + ~/.claude/command
 
 ## 最终数字
 
+v1 基线：
+
 | 类型 | from ecc | fork | 原创 | total |
 |---|---|---|---|---|
 | agents | 31 | 0 | 0 | 31 |
 | skills | 73 | 0 | 0 | 73 |
 | commands | 29 | 1 | 1 | 31 |
 | **总** | **133** | **1** | **1** | **135** |
+
+当前 repo 额外 post-v1 本地项：
+
+| 类型 | 本地原创新增 | 当前 total |
+|---|---:|---:|
+| skills | 1 (`video-extract`) | 74 |
+| commands | 0 | 31 |
 
 > v1 keep total **135** 项（与 prior summary 一致；取代 SELECTION-v1.md 原写的 ~137）。差异来源：
 > - 归类修正 -0（skill-comply/scout/stocktake 从 commands 移到 skills，相互抵消）

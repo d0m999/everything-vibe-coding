@@ -124,6 +124,10 @@
 
 - `ecc:skill-comply`、`ecc:skill-scout`、`ecc:skill-stocktake`
 
+### Post-v1 本地原创 Skills（1）
+
+- `video-extract`（本地原创，纳入 `skills/video-extract/`；用于读取/总结/转写视频，快路径走字幕或 `yt-dlp`，YouTube 403 / SABR / PO-token 时走真实浏览器播放、跳帧截图与音频兜底）
+
 ### Commands（31）
 
 > 29 from ecc + 1 fork (`plan-orchestrate`) + 1 原创 (`ralph-init`)
