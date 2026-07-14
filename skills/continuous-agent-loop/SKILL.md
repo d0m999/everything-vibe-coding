@@ -41,6 +41,6 @@ Recommended production stack:
 ## Recovery
 
 - freeze loop
-- run `/harness-audit`
+- audit the harness configuration (hooks, routing, context budget)
 - reduce scope to failing unit
 - replay with explicit acceptance criteria
