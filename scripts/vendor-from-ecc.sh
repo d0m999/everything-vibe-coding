@@ -61,13 +61,16 @@ AGENTS=(
 )
 
 SKILLS=(
-  # TS / 前端 (18)
+  # TS / 前端 (17)
   accessibility               bun-runtime                  design-system
   frontend-design-direction   frontend-patterns            frontend-slides
-  liquid-glass-design         make-interfaces-feel-better  motion-advanced
+  make-interfaces-feel-better motion-advanced
   motion-foundations          motion-patterns              motion-ui
   nestjs-patterns             nextjs-turbopack             nuxt4-patterns
   ui-demo                     ui-to-vue                    vite-patterns
+  # Swift / iOS (6)
+  swiftui-patterns             swift-concurrency-6-2       swift-actor-persistence
+  swift-protocol-di-testing    foundation-models-on-device liquid-glass-design
   # Python / AI (14)
   django-celery               django-patterns              django-security
   django-tdd                  django-verification          fal-ai-media
@@ -117,6 +120,10 @@ COUNT_MISSING=0
 COUNT_PLANNED=0
 
 # ===== Functions =====
+# Agents get no Source comment at all: the agent loader requires frontmatter
+# to start at line 1, and a leading comment silently drops the agent from the
+# Available agents list (see commit 887eac6). Skills/commands tolerate — and
+# use — a comment placed right after the closing frontmatter `---`.
 insert_source_comment() {
   local file="$1"
   local rel="$2"
@@ -124,13 +131,23 @@ insert_source_comment() {
 
   [[ ! -f "$file" ]] && return
 
-  # idempotent: skip if file already has a Source: ecc@ comment in the first 5 lines
-  if head -5 "$file" 2>/dev/null | grep -q "<!-- Source: ecc@"; then
+  # idempotent: skip if file already has a Source: ecc@ comment anywhere in the first 10 lines
+  if head -10 "$file" 2>/dev/null | grep -q "<!-- Source: ecc@"; then
     return
   fi
 
+  # Only insert when the file has YAML frontmatter starting at line 1;
+  # insert after the SECOND `---` line (the closing delimiter), not before the first.
+  if [[ "$(sed -n '1p' "$file")" != "---" ]]; then
+    return
+  fi
+  local close_line
+  close_line="$(awk 'NR>1 && /^---$/ { print NR; exit }' "$file")"
+  [[ -z "$close_line" ]] && return
+
   local tmp="${file}.tmp.$$"
-  { printf '%s\n' "$marker"; cat "$file"; } > "$tmp"
+  awk -v n="$close_line" -v marker="$marker" \
+    'NR==n { print; print marker; next } { print }' "$file" > "$tmp"
   mv "$tmp" "$file"
 }
 
@@ -175,7 +192,8 @@ copy_one() {
     insert_source_comment "$dst/SKILL.md" "$rel/SKILL.md"
   else
     cp "$src" "$dst"
-    insert_source_comment "$dst" "$rel"
+    # Agents get no Source comment — see insert_source_comment's docstring.
+    [[ "$type" != "agents" ]] && insert_source_comment "$dst" "$rel"
   fi
   printf '  ✓ COPIED   %s\n' "$rel"
   COUNT_COPIED=$((COUNT_COPIED + 1))
