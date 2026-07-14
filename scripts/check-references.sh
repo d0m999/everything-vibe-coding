@@ -62,7 +62,15 @@ HITS_FILE="/tmp/v1-hits.$$"
 while IFS= read -r name; do
   # Match the name as a "word" (boundary) — \b doesn't work in BSD grep, use ERE
   # Pattern: surround with non-name-char or BOL/EOL
-  matches=$(grep -rnE "(^|[^a-z0-9_-])$name([^a-z0-9_-]|$)" \
+  #
+  # -I and the --exclude-dirs keep gitignored build artifacts out of the count. Without
+  # them a developer's local __pycache__/*.pyc matched as "Binary file ... matches" and
+  # inflated the totals, so the numbers depended on whose machine ran the script — which
+  # is how the stale 98/34/28/5 figures got written into docs/ in the first place.
+  matches=$(grep -rnE -I \
+    --exclude-dir=__pycache__ --exclude-dir=.pytest_cache --exclude-dir=.mypy_cache \
+    --exclude-dir=.ruff_cache --exclude-dir=node_modules --exclude-dir=.git \
+    "(^|[^a-z0-9_-])$name([^a-z0-9_-]|$)" \
     agents/ skills/ commands/ 2>/dev/null || true)
   if [[ -n "$matches" ]]; then
     while IFS= read -r m; do
