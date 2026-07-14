@@ -31,12 +31,16 @@
 | 2026-07-14 | `skills/agent-introspection-debugging/SKILL.md` | `council`/`workspace-surface-audit` 建议改为"直接问用户"/"用 `git status`/`git diff` 审查工作区" | 两者均未 vendor 且无直接等价物，改写为不依赖具名组件的可执行指令 |
 | 2026-07-14 | `skills/canary-watch/SKILL.md`、`skills/continuous-agent-loop/SKILL.md` | `/browser-qa`→gstack `/qa`；`/quality-gate`（伪装成 slash command）→明确是自动 hook；`nanoclaw-repl`→改写为"内置 context compaction + strategic-compact" | 前二者未 vendor，第三者原表述把一个自动运行的 hook 误写成了可调用的 slash command |
 | 2026-07-14 | `skills/skill-comply/SKILL.md`、`skills/skill-scout/SKILL.md`、`skills/autonomous-loops/SKILL.md` | 示例/Related 里的 `search-first`/`agent-sort`/`article-writing`/`content-engine` 换成本仓库真实存在的 `documentation-lookup`/`repo-scan`/`verification-loop`；`CLAW_SKILLS=tdd-workflow` 示例值换成 `verification-loop` | 这些是文档里的示例/参考清单，换成真实存在的名字之后示例本身也更可信 |
+| 2026-07-14 | `skills/autonomous-loops/SKILL.md` | 删除「2. NanoClaw REPL」整节（含 `node scripts/claw.js` 命令、`~/.claude/claw/{session}.md` 会话约定、NanoClaw-vs-Pipeline 对比表、指向 `/claw` 命令的说明）；随后把 Loop Pattern Spectrum 表、Ralphinho 对比表（"Quick iteration on one thing"）、Choosing-the-Right-Pattern 决策树、References 表里的 NanoClaw 条目一并清掉；章节 3–6 顺延重编号为 2–5，6 处 `](#...)` 锚点同步更新 | 该节依赖 ECC 自带的 `scripts/claw.js`，本仓库从未 vendor（`scripts/` 下只有 `check-references.sh`/`generate-codex-command-skills.sh`/`vendor-from-ecc.sh`），`/claw` 命令同样不存在，整节功能实际不可用。选择删而非补 vendor：补进来要连带维护一个上游 Node 脚本 + `~/.claude/claw/` 会话约定，而「交互式持久会话」诉求已被 `verification-loop`/`continuous-agent-loop` 覆盖。**注意**：`check-references.sh` 检测不到这类缺口——drop 名字 `nanoclaw-repl` 从未在正文以字面形式出现（正文写的是 "NanoClaw REPL" 和 `scripts/claw.js`），删完 97 行/13 名字里只掉了 1 行 `sessions` 假阳性 |
 
 接受现状（假阳性，详见 `docs/UPSTREAM.md`）：`sessions`(34)、`projects`(28)、`checkpoint`(12)、`promote`(5)、`benchmark`(4) 是通用英文词撞名；
 `tdd-workflow`(3，仅剩 `skill-comply` 测试 fixture 内部 id) 是本仓库自己的标识符；`quality-gate`(2)、`git-workflow`(1) 是对真实本地 hook/rules 文件的正确指代；
 `chief-of-staff`(1)、`django-reviewer`/`django-build-resolver`(2+2)、`rust-reviewer`/`rust-build-resolver`(2+2) 都出现在 `plan-orchestrate.md` 故意的"不要 emit 这些名字"排除清单里，命中是预期行为。
 
-未补 vendor、也未改写的已知缺口（留给下一轮，不在本次范围内）：`skills/autonomous-loops/SKILL.md` 的"NanoClaw REPL"整节描述的是 ECC 自带的 `scripts/claw.js`，本仓库从未 vendor 这个脚本，整节功能实际不可用（只做了示例值的最小修复，没有决定"补 vendor 还是删整节"）。
+已知缺口（本轮内已收尾）：`skills/autonomous-loops/SKILL.md` 的 "NanoClaw REPL" 整节描述的是 ECC 自带的 `scripts/claw.js`，本仓库从未 vendor 这个脚本，整节功能实际不可用。
+最初只做了示例值的最小修复，把"补 vendor 还是删整节"的决定留到后面；现已决定**删整节**并执行完毕（见上表最后一行）。
+教训：这类缺口 `check-references.sh` 扫不出来——它按 drop 名字的字面形式 grep，而正文写的是 "NanoClaw REPL" / `scripts/claw.js`，与 drop 名字 `nanoclaw-repl` 对不上。
+**凡是引用了脚本路径、slash command 或产品名（而非 agent/skill 标识符）的段落，都要人工核对被引用物是否真的存在于本仓库。**
 
 ## 2026-06-16 — Codex skill frontmatter 兼容
 
