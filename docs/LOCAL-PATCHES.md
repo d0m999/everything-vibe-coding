@@ -6,6 +6,18 @@
 >
 > 用途：将来从上游同步新版本时识别需要 re-apply 的修改点。
 
+## 2026-07-14 — commands/ → skills/ 迁移（Phase 1，灰度）
+
+把 legacy `commands/*.md` 平迁成 `skills/<name>/SKILL.md`（斜杠名不变），走灰度：Phase 1 只新增 skills/，`commands/` 原文件保留在原地当回滚，暂不改 `install.sh`/`install-codex.sh`/`generate-codex-command-skills.sh`（那是 Phase 2）。24 个无冲突文件是纯机械迁移（只加 `name:` frontmatter 字段，正文逐字节不变，用 `diff` 核对过），未逐行记录；以下三处是有实质内容改动或被放弃的：
+
+| 日期 | 文件 | 修改 | 原因 |
+|---|---|---|---|
+| 2026-07-14 | `skills/security-scan/SKILL.md` | 并入 `commands/security-scan.md` 的 `/security-scan` 调用语法、Review Checklist、Output Contract（新增 `## Running via /security-scan` 节），删掉重复的 CI yaml 片段；`## Links` 加一条 `agents/security-reviewer.md`；然后删除 `commands/security-scan.md` | `skills/security-scan/SKILL.md`（AgentShield 参考文档）已先于本次迁移存在，和 `commands/security-scan.md`（`/security-scan` 斜杠工作流）撞名——直接 `git mv` 会整个覆盖掉现有参考文档。命令原有的 `agent: security-reviewer` + `subtask: true` 两个字段从未生效（commands 不支持这两个字段，和 Phase 0 修的 `allowed_tools` 同款静默失效 bug）；核对了全仓库已安装 skill 的 frontmatter 词表（`allowed-tools`/`origin`/`metadata`/… 共 12 个真实字段），确认 skills 系统里**没有** `context:` 这个字段——原计划提议的 `context: fork` 是编的，不能照抄，否则就是复刻同一类"字段silently被忽略"的 bug。改成用正文显式指令："Delegate execution: run the scan via the Agent tool with `subagent_type: security-reviewer`"，这是本仓库其他 skill（如 `agent-eval`）表达"委派给子代理"的真实工作方式 |
+| 2026-07-14 | `skills/ralph-init/SKILL.md`、`skills/ralph-init/references/output-contracts.md` | 4 处硬编码 `~/.claude/commands/ralph-init/...` 改成 `~/.claude/skills/ralph-init/...`（SKILL.md 正文 1 处 + output-contracts.md 里 3 个 `python3` 校验命令） | 安装后的真实路径从 `~/.claude/commands/ralph-init` 变成 `~/.claude/skills/ralph-init`；迁移后跑了 `scripts/run_fixtures.sh`，21/21 通过 |
+| 2026-07-14 | `commands/learn.md`（删除，未迁移） | 没有生成 `skills/learn/`；直接删掉 `commands/learn.md`，不迁移 | `install.sh` 干跑发现 `~/.claude/skills/learn` 已经是 gstack 插件的 `/learn`（"Manage project learnings"，真实文件在 `~/.claude/skills/gstack/learn/`），不是指回本仓库的 symlink。同名 skill 优先于 command 的规则下，本仓库的 `/learn`（"提取本次会话可复用模式"）今天就已经被 gstack 遮蔽、实际不可达；迁移只会把"哑冲突"变成"`install.sh --apply` 强制 backup 并覆盖 gstack 目录"的真冲突。用户确认：功能已被 gstack 版本取代，直接删，不改名保留 |
+
+灰度期间 `~/.claude/commands/{learn,security-scan}.md` 这两条 symlink 会变成悬空（源文件已删）；`install.sh --prune` 会在下一次 `--apply --prune` 时自动清掉，不需要手工处理。
+
 ## 2026-07-14 — P0 安装面闭环整改
 
 来源：对照 `obra/superpowers` 的结构审计（160-agent 工作流）。修复"仓库有、但没装进 harness"和"vendored skill 正文自我覆盖仓库"两类问题，详见 `PLAN-P0.md`。

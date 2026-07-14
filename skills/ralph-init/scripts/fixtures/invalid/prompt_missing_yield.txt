@@ -1,0 +1,7 @@
+# Prompt that never signals YIELD/COMPLETE
+
+Step 0: read .ralph/current_story.json
+Step 1: read .ralph/progress.txt
+Step 2: read .ralph/prd.json
+
+Do the work and exit silently.

@@ -1,0 +1,11 @@
+# Ralph PROMPT (invalid fixture)
+
+Step 0: read `.ralph/current_story.json`.
+Step 1: read `.ralph/progress.txt`.
+Step 2: read `.ralph/prd.json`.
+
+Work on the locked story only. Update `progress.txt` with what you learned.
+
+When done:
+- emit `<promise>YIELD</promise>` to hand back, or
+- emit `<promise>COMPLETE</promise>` when the whole PRD is done.

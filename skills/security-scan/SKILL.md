@@ -128,6 +128,53 @@ Add to your CI pipeline:
     fail-on-findings: true
 ```
 
+## Running via /security-scan
+
+Invoke with `/security-scan [path] [--format text|json|markdown|html] [--min-severity low|medium|high|critical] [--fix]` to turn a scan into a prioritized remediation plan instead of a raw report.
+
+- `path` (optional): defaults to the current project. Use a `.claude/` path, a repo root, or a checked-in template directory.
+- `--format`: output format — see [Output Formats](#output-formats) above. Use `json` for CI, `markdown` for handoffs, `html` for standalone review reports.
+- `--min-severity`: filters lower-priority findings.
+- `--fix`: applies only the fixes AgentShield marks as safe and auto-fixable — see [Auto-Fix](#auto-fix) above.
+
+**Delegate execution**: run the scan via the Agent tool with `subagent_type: security-reviewer` so it executes in an isolated context and returns a structured report, rather than running inline in the main conversation.
+
+Do not invent findings. Use AgentShield output as the source of truth and separate scanner facts from follow-up judgment.
+
+### Review Checklist
+
+1. Identify active runtime findings first:
+   - hardcoded secrets
+   - broad permissions
+   - executable hooks
+   - MCP servers with shell, filesystem, remote transport, or unpinned `npx`
+   - agent prompts that handle untrusted content without defenses
+2. Separate lower-confidence inventory:
+   - docs examples
+   - template examples
+   - plugin manifests
+   - project-local optional settings
+3. For each critical or high finding, return:
+   - file path
+   - severity
+   - runtime confidence
+   - why it matters
+   - exact remediation
+   - whether it is safe to auto-fix
+4. If `--fix` is requested, state the planned edits before applying fixes.
+5. Re-run the scan after fixes and report the before/after score.
+
+### Output Contract
+
+Return:
+
+1. Security grade and score.
+2. Counts by severity and runtime confidence.
+3. Critical/high findings with exact paths.
+4. Lower-confidence findings grouped separately.
+5. A remediation order.
+6. Commands run and whether the scan was local, CI, or npx-backed.
+
 ## Severity Levels
 
 | Grade | Score | Meaning |
@@ -164,3 +211,4 @@ Add to your CI pipeline:
 
 - **GitHub**: [github.com/affaan-m/agentshield](https://github.com/affaan-m/agentshield)
 - **npm**: [npmjs.com/package/ecc-agentshield](https://www.npmjs.com/package/ecc-agentshield)
+- **Agent**: `agents/security-reviewer.md`

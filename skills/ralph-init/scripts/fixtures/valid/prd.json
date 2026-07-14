@@ -1,0 +1,38 @@
+{
+  "project": "demo",
+  "branchName": "feat/demo",
+  "description": "demo project for fixture regression",
+  "designDocs": ["docs/plan.md"],
+  "userStories": [
+    {
+      "id": "DEMO-01",
+      "title": "schema init",
+      "description": "initialize schema",
+      "planSection": "§1",
+      "designDocRef": "docs/plan.md",
+      "storyType": "code",
+      "entryCount": 0,
+      "modifies": ["src/schema.ts", "src/__tests__/schema.test.ts"],
+      "creates": [],
+      "acceptanceCriteria": ["tests green"],
+      "priority": 1,
+      "passes": false,
+      "notes": "baseline"
+    },
+    {
+      "id": "DEMO-02",
+      "title": "data fill",
+      "description": "fill entries",
+      "planSection": "§2",
+      "designDocRef": "docs/plan.md",
+      "storyType": "data-fill",
+      "entryCount": 12,
+      "modifies": ["data/items.yaml"],
+      "creates": [],
+      "acceptanceCriteria": ["count == 12"],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}
