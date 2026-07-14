@@ -4,10 +4,10 @@
 >
 > 用途：将来从上游同步新版本时识别需要 re-apply 的修改点。
 
-## 2026-07-14 — 存量悬空引用清理（226 行 → 98 行）
+## 2026-07-14 — 存量悬空引用清理（222 行 → 93 行）
 
 对 2026-05-16 vendoring 时就存在、此前一直"接受现状"未处理的悬空引用做了一轮系统清理。
-`scripts/check-references.sh` 命中从 226 行 / 76 个 drop 名字降到 98 行 / 13 个 drop 名字；
+`scripts/check-references.sh` 命中从 222 行 / 76 个 drop 名字降到 93 行 / 13 个 drop 名字（两个数字都用加固后的脚本、在干净 checkout 上量得，同一把尺子）；
 剩余 13 个全部是假阳性或对真实本地事物的正确指代，见 `docs/UPSTREAM.md`。
 
 补 vendor（用户确认）：
@@ -26,14 +26,15 @@
 | 2026-07-14 | `commands/plan-orchestrate.md` | 从 Available-agent-catalogue 和 Phase 0/2 的 `py_sub`/`lang` 解析表中移除已归档的 `django-reviewer`/`django-build-resolver`/`rust-reviewer`/`rust-build-resolver`，归并到 generic 回退路径；更新 Not-in-catalogue 排除清单 | `django-*`/`rust-*` 两套 agent 已被 `071d3d9` 归档到 `attic/`（v1 主动裁剪），但这个文件的 py_sub/lang 解析逻辑没跟着更新，会 emit 出已不存在的 agent 名字 |
 | 2026-07-14 | `commands/plan.md`、`commands/plan-prd.md` | `tdd-workflow` skill → `tdd-guide` agent；`/pr`、`/prp-pr` → `gh pr create`（或 gstack `/ship`）；删除指向 `/prp-plan`/`/prp-implement` 的 legacy PRP 流程提示 | `/pr`/`/prp-pr`/`/prp-plan`/`/prp-implement` 都是 ECC 命令，本仓库均未 vendor，且没有 `.claude/PRPs/` 这套本地约定 |
 | 2026-07-14 | `commands/hookify.md` | `/hookify` 零参数路径从"调用 `conversation-analyzer` agent"改为"直接读回当前对话" | `conversation-analyzer` 从未 vendor（`docs/ECC-DRIFT-AUDIT.md` §3.3 已记录此断链）；改为让 Claude 自己分析对话，不再依赖不存在的子 agent |
-| 2026-07-14 | `agents/tdd-guide.md`、`agents/e2e-runner.md`、`commands/python-review.md`、`skills/strategic-compact/SKILL.md`（2 处） | `tdd-workflow`/`e2e-testing` 引用改为指向 `tdd-guide`/`e2e-runner` agent 或 gstack `/qa` | 用户明确选择：不补 vendor 这两个 skill，仓库已有对应 agent 就够用 |
+| 2026-07-14 | `agents/tdd-guide.md`、`agents/e2e-runner.md`、`commands/python-review.md`、`skills/strategic-compact/SKILL.md`（1 处） | `tdd-workflow`/`e2e-testing` 引用改为指向 `tdd-guide`/`e2e-runner` agent 或 gstack `/qa` | 用户明确选择：不补 vendor 这两个 skill，仓库已有对应 agent 就够用 |
+| 2026-07-14 | `skills/strategic-compact/SKILL.md`（1 处） | Auto-Compact 前置动作里的 `continuous-learning` skill → `/learn-eval` command | `continuous-learning` 已被 `071d3d9` 归档到 `attic/skills/`（仓库内另有一个 gitignored 的 `continuous-learning-v2/`，不是可引用组件）；本仓库真实存在的等价物是 `/learn-eval` |
 | 2026-07-14 | `agents/typescript-reviewer.md`、`skills/coding-standards/SKILL.md`、`skills/postgres-patterns/SKILL.md`、`skills/redis-patterns/SKILL.md` | 删除 `backend-patterns`、`clickhouse-io`、`django-patterns` 引用 | 三者均未 vendor（`clickhouse-io`/`django-patterns` 已被 `071d3d9` 归档），且没有 1:1 本地替代品，直接删引用 |
 | 2026-07-14 | `skills/agent-introspection-debugging/SKILL.md` | `council`/`workspace-surface-audit` 建议改为"直接问用户"/"用 `git status`/`git diff` 审查工作区" | 两者均未 vendor 且无直接等价物，改写为不依赖具名组件的可执行指令 |
 | 2026-07-14 | `skills/canary-watch/SKILL.md`、`skills/continuous-agent-loop/SKILL.md` | `/browser-qa`→gstack `/qa`；`/quality-gate`（伪装成 slash command）→明确是自动 hook；`nanoclaw-repl`→改写为"内置 context compaction + strategic-compact" | 前二者未 vendor，第三者原表述把一个自动运行的 hook 误写成了可调用的 slash command |
 | 2026-07-14 | `skills/skill-comply/SKILL.md`、`skills/skill-scout/SKILL.md`、`skills/autonomous-loops/SKILL.md` | 示例/Related 里的 `search-first`/`agent-sort`/`article-writing`/`content-engine` 换成本仓库真实存在的 `documentation-lookup`/`repo-scan`/`verification-loop`；`CLAW_SKILLS=tdd-workflow` 示例值换成 `verification-loop` | 这些是文档里的示例/参考清单，换成真实存在的名字之后示例本身也更可信 |
-| 2026-07-14 | `skills/autonomous-loops/SKILL.md` | 删除「2. NanoClaw REPL」整节（含 `node scripts/claw.js` 命令、`~/.claude/claw/{session}.md` 会话约定、NanoClaw-vs-Pipeline 对比表、指向 `/claw` 命令的说明）；随后把 Loop Pattern Spectrum 表、Ralphinho 对比表（"Quick iteration on one thing"）、Choosing-the-Right-Pattern 决策树、References 表里的 NanoClaw 条目一并清掉；章节 3–6 顺延重编号为 2–5，6 处 `](#...)` 锚点同步更新 | 该节依赖 ECC 自带的 `scripts/claw.js`，本仓库从未 vendor（`scripts/` 下只有 `check-references.sh`/`generate-codex-command-skills.sh`/`vendor-from-ecc.sh`），`/claw` 命令同样不存在，整节功能实际不可用。选择删而非补 vendor：补进来要连带维护一个上游 Node 脚本 + `~/.claude/claw/` 会话约定，而「交互式持久会话」诉求已被 `verification-loop`/`continuous-agent-loop` 覆盖。**注意**：`check-references.sh` 检测不到这类缺口——drop 名字 `nanoclaw-repl` 从未在正文以字面形式出现（正文写的是 "NanoClaw REPL" 和 `scripts/claw.js`），删完 97 行/13 名字里只掉了 1 行 `sessions` 假阳性 |
+| 2026-07-14 | `skills/autonomous-loops/SKILL.md` | 删除「2. NanoClaw REPL」整节（含 `node scripts/claw.js` 命令、`~/.claude/claw/{session}.md` 会话约定、NanoClaw-vs-Pipeline 对比表、指向 `/claw` 命令的说明）；随后把 Loop Pattern Spectrum 表、Ralphinho 对比表（"Quick iteration on one thing"）、Choosing-the-Right-Pattern 决策树、References 表里的 NanoClaw 条目一并清掉；章节 3–6 顺延重编号为 2–5，6 处 `](#...)` 锚点同步更新 | 该节依赖 ECC 自带的 `scripts/claw.js`，本仓库从未 vendor（`scripts/` 下只有 `check-references.sh`/`generate-codex-command-skills.sh`/`vendor-from-ecc.sh`），`/claw` 命令同样不存在，整节功能实际不可用。选择删而非补 vendor：补进来要连带维护一个上游 Node 脚本 + `~/.claude/claw/` 会话约定，而「交互式持久会话」诉求已被 `verification-loop`/`continuous-agent-loop` 覆盖。**注意**：`check-references.sh` 检测不到这类缺口——drop 名字 `nanoclaw-repl` 从未在正文以字面形式出现（正文写的是 "NanoClaw REPL" 和 `scripts/claw.js`），删完只掉了 1 行 `sessions` 假阳性（94 → 93） |
 
-接受现状（假阳性，详见 `docs/UPSTREAM.md`）：`sessions`(34)、`projects`(28)、`checkpoint`(12)、`promote`(5)、`benchmark`(4) 是通用英文词撞名；
+接受现状（假阳性，详见 `docs/UPSTREAM.md`）：`sessions`(32)、`projects`(26)、`checkpoint`(12)、`promote`(4)、`benchmark`(4) 是通用英文词撞名；
 `tdd-workflow`(3，仅剩 `skill-comply` 测试 fixture 内部 id) 是本仓库自己的标识符；`quality-gate`(2)、`git-workflow`(1) 是对真实本地 hook/rules 文件的正确指代；
 `chief-of-staff`(1)、`django-reviewer`/`django-build-resolver`(2+2)、`rust-reviewer`/`rust-build-resolver`(2+2) 都出现在 `plan-orchestrate.md` 故意的"不要 emit 这些名字"排除清单里，命中是预期行为。
 
@@ -41,6 +42,22 @@
 最初只做了示例值的最小修复，把"补 vendor 还是删整节"的决定留到后面；现已决定**删整节**并执行完毕（见上表最后一行）。
 教训：这类缺口 `check-references.sh` 扫不出来——它按 drop 名字的字面形式 grep，而正文写的是 "NanoClaw REPL" / `scripts/claw.js`，与 drop 名字 `nanoclaw-repl` 对不上。
 **凡是引用了脚本路径、slash command 或产品名（而非 agent/skill 标识符）的段落，都要人工核对被引用物是否真的存在于本仓库。**
+
+## 2026-07-14 — codex review 复核后的修正
+
+上一轮清理落地后跑了一次 `/codex review` + 独立验证，发现 4 类问题。按「会不会让下游 agent 产出坏东西」排序修复：
+
+| 日期 | 文件 | 修改 | 原因 |
+|---|---|---|---|
+| 2026-07-14 | `skills/foundation-models-on-device/SKILL.md` | Tool 示例的 `func call(...) async throws -> ToolOutput` + `return .string(...)` 改为 `-> String` + 直接返回字符串；Snapshot streaming 的 `for try await partial in stream` 里 `partial` 改为 `partial.content`（含 SwiftUI 示例） | **本轮 vendor 新引入的最严重问题**。`ToolOutput` 是 WWDC25 beta API，正式版**不存在**：真实 `Tool` 协议是 `associatedtype Output: PromptRepresentable`，框架里唯一的 `ToolOutput` 是 `Transcript.ToolOutput`（transcript 条目，不是返回值）。`streamResponse` 的元素也不是 `PartiallyGenerated` 而是 `ResponseStream<Content>.Snapshot`。两处均已用真实 SDK 的 `.swiftinterface` 核对；照抄原文的 agent 会产出编译不过的 Swift |
+| 2026-07-14 | `scripts/vendor-from-ecc.sh` | manifest 数组剔除 29 个已归档条目（4 agents + 3 commands + 22 skills）；`copy_one()` 增加 attic 守卫（命中即 `⊘ ARCHIVED` 并拒绝，汇总时 exit 3）；`--help` 里硬编码的 "31 agents + 73 skills + 29 commands = 133" 改为运行时从数组长度派生 | 数组从未随 `071d3d9` 的归档同步剪枝，跑一次脚本自己文档写的 `--apply` 就会把 django/rust 等 29 个组件静默复活、exit 0，把这轮清理干掉的悬空引用重新拖回来。守卫是防复发的那道锁：以后有人把名字加回 manifest 也复活不了。硬编码计数同时也是 `--help` 文本，和汇总里的真实值（130）自相矛盾 |
+| 2026-07-14 | `scripts/check-references.sh` | grep 增加 `-I` 与 `--exclude-dir=__pycache__/.pytest_cache/.mypy_cache/.ruff_cache/node_modules/.git` | **文档数字对不上的根因**。原先会把 gitignored 的 `__pycache__/*.pyc` 计为 "Binary file matches"，于是命中数取决于谁的机器在跑——上一轮记进 docs 的 98/34/28/5 就是这么来的。修复后脏工作区与干净 checkout 结果一致 |
+| 2026-07-14 | `docs/UPSTREAM.md`、`docs/LOCAL-PATCHES.md` | 用加固后的脚本在干净 checkout 上重量：清理前后 `226 → 98` 改为 `222 → 93`；`sessions` 34→32、`projects` 28→26、`promote` 5→4（`checkpoint`(12)、`benchmark`(4)、13 个名字这几项原本就是对的，未动） | 同上，旧数字是脏工作区产物。已在 UPSTREAM 顶部写明「必须用干净 checkout 复现」 |
+| 2026-07-14 | `docs/SELECTION-v1.md` | 把 django/rust 四个 agent 从「框架专用(5)」「语言专用(6)」的 v1 keep 名单移出，新增「已归档」小节记录归档位置与原因 | 上一轮新加的交叉引用（`plan-orchestrate.md:119`、`prompt-optimizer/SKILL.md:142`）让读者「见 `docs/SELECTION-v1.md`」，但那份文档仍把这四个列为 v1 keep、只字未提归档——指路牌指向了说反话的文档 |
+| 2026-07-14 | `commands/plan-orchestrate.md` | 报告模板 `py_sub: <mle\|django\|fastapi\|generic>` 去掉 `django`；第 4 行 fork 注释同步（措辞避免再次点名两个 agent，以免推高假阳性计数） | `36679ef` 删掉了 Phase 0/2 的 django 分支，但输出模板还在给模型 `django` 这个已无映射的枚举值 |
+| 2026-07-14 | `docs/LOCAL-PATCHES.md` | 上一轮表格里 `skills/strategic-compact/SKILL.md`（2 处）更正为（1 处），并补记真正的第二处改动：`continuous-learning` skill → `/learn-eval` command | 该文件在上一轮实际改了 2 处，但只有 1 处属于 tdd/e2e 那类改动；另一处（`continuous-learning` 已归档到 attic）被算进了同一行，等于没记录 |
+
+方法论教训：**review 的每条断言都要独立复现再采纳。** 这轮里 Codex 报的 3 条，1 条结论对但归因是编的（说"清理删了别处、漏了这处"，实际该文件在那个 range 里只改了一行）、1 条完全正确、1 条是错的（说 `git-workflow` 那行"用仓库外文件证明仓库内自洽"，但原文本来就写明"不在本仓库 tree 内"）。真正最严重的两个 P1（上面第一行）Codex 完全没发现，是独立扫描用真实 SDK 编译示例代码才抓到的。
 
 ## 2026-06-16 — Codex skill frontmatter 兼容
 

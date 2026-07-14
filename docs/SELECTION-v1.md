@@ -62,22 +62,36 @@
 - `ecc:a11y-architect`
 - `ecc:build-error-resolver`
 
-**框架专用（5）**
+**框架专用（3）**
 
-- `ecc:django-reviewer`
-- `ecc:django-build-resolver`
 - `ecc:fastapi-reviewer`
 - `ecc:mle-reviewer`
 - `ecc:pytorch-build-resolver`
+- ~~`ecc:django-reviewer`~~ — 2026-07-14 归档到 `attic/agents/`，见下方「已归档」
+- ~~`ecc:django-build-resolver`~~ — 同上
 
-**语言专用（6）**
+**语言专用（4）**
 
 - `ecc:typescript-reviewer`
 - `ecc:python-reviewer`
 - `ecc:swift-reviewer`
 - `ecc:swift-build-resolver`
-- `ecc:rust-reviewer`
-- `ecc:rust-build-resolver`
+- ~~`ecc:rust-reviewer`~~ — 2026-07-14 归档到 `attic/agents/`，见下方「已归档」
+- ~~`ecc:rust-build-resolver`~~ — 同上
+
+### 已归档（2026-07-14，v1 选型之后）
+
+以下条目当初选入 v1 keep，随后归档到 `attic/`，**不再 vendor、不得在 agent 目录中引用**：
+
+| 组件 | 归档位置 | 原因 |
+|---|---|---|
+| `django-reviewer` / `django-build-resolver` | `attic/agents/` | Django 不在实际技术栈内；`py_sub=django` 分支已从 `plan-orchestrate` 移除 |
+| `rust-reviewer` / `rust-build-resolver` | `attic/agents/` | 同上，Rust 出 v1 范围 |
+| `rust-build` / `rust-review` / `rust-test` | `attic/commands/` | 随 rust agent 一并归档 |
+| django 系 5 个 skill、前端 motion/vite/nuxt 系等共 22 个 skill | `attic/skills/` | 见 `docs/LOCAL-PATCHES.md` |
+
+`scripts/vendor-from-ecc.sh` 现在会拒绝 vendor 任何存在于 `attic/` 的名字（`⊘ ARCHIVED`，exit 3），
+所以这份名单不会被下一次 `--apply` 悄悄复活。
 
 **工具 / 流程（2）**
 

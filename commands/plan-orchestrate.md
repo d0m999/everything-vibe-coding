@@ -1,7 +1,7 @@
 ---
 description: Read a plan document, decompose it into steps, design a per-step agent chain from the bare-vendored catalogue, emit ready-to-paste Agent tool invocation blocks, and produce a parallel-execution Mermaid graph + waves table showing which steps can run concurrently across separate Claude sessions. Generative only — never invokes the Agent tool itself; output is for the user (or a downstream session) to execute. Use when the user has a multi-step plan and wants to drive it through sequenced Agent calls without composing chains by hand.
 ---
-<!-- Local fork: 2026-05-16 — adapted for bare-vendored install (no plugin namespace). Source: ~/.claude/commands/plan-orchestrate.md (user original, 328 lines). Changes: dropped ECC_MODE detection (Phase 0), extended py_sub to {mle,django,fastapi,generic}, replaced catalogue with v1 keep agents, added debug tag, removed e2e-runner from test chain (E2E → gstack /qa). See README appendix A-H. -->
+<!-- Local fork: 2026-05-16 — adapted for bare-vendored install (no plugin namespace). Source: ~/.claude/commands/plan-orchestrate.md (user original, 328 lines). Changes: dropped ECC_MODE detection (Phase 0), extended py_sub to {mle,fastapi,generic} (the django path was dropped 2026-07-14 when its reviewer/build-resolver were archived to attic/ — see docs/SELECTION-v1.md), replaced catalogue with v1 keep agents, added debug tag, removed e2e-runner from test chain (E2E → gstack /qa). See README appendix A-H. -->
 <!-- 2026-05-17: added Phase 4 "Build parallel-execution DAG" + Mermaid graph + waves table in output; renumbered original Phase 4/5 → 5/6; added "Plan dependency syntax" section. -->
 
 # Plan Orchestrate
@@ -235,7 +235,7 @@ Output structure:
 # Plan-Orchestrate Result
 
 **Plan**: `<path>`
-**Lang**: `<detected-or-given>` (py_sub: `<mle|django|fastapi|generic>` when lang=python)
+**Lang**: `<detected-or-given>` (py_sub: `<mle|fastapi|generic>` when lang=python)
 **Steps**: <N>
 **Scope**: <all | step:n | range:a-b>
 
