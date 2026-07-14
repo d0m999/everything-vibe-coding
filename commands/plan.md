@@ -182,14 +182,12 @@ If you want changes, respond with:
 ## Integration with Other Commands
 
 After planning:
-- Use the `tdd-workflow` skill to implement with test-driven development
+- Use the `tdd-guide` agent to implement with test-driven development
 - Use `/build-fix` if build errors occur
 - Use `/code-review` to review completed implementation
-- Use `/pr` or `/prp-pr` to open a pull request
+- Open a pull request with `gh pr create` (or gstack `/ship` for the full merge + version bump + PR flow)
 
 > **Need requirements first?** Use `/plan-prd` for a lean PRD at `.claude/prds/{name}.prd.md`.
->
-> **Need the legacy PRP flow?** Use `/prp-plan` for deep PRP planning with `.claude/PRPs/` artifacts. Use `/prp-implement` to execute those plans with rigorous validation loops.
 
 ## Optional Planner Agent
 

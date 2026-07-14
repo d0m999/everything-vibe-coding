@@ -149,8 +149,8 @@ Next step: /plan .claude/prds/{name}.prd.md
 ## Integration
 
 - `/plan <prd-path>` — consume the PRD and produce an implementation plan for the next pending milestone.
-- `tdd-workflow` skill — implement the plan test-first.
-- `/pr` — open a PR that references the PRD and plan.
+- `tdd-guide` agent — implement the plan test-first.
+- Open a PR that references the PRD and plan with `gh pr create` (or gstack `/ship`).
 
 ## Success criteria
 
