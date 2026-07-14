@@ -7,6 +7,7 @@
 #   ./install.sh --apply --backup       # backup ~/.claude/ first (recommended)
 #   ./install.sh --apply --force        # overwrite existing targets without .bak
 #   ./install.sh --apply --backup --force  # both
+#   ./install.sh --apply --prune        # also remove dangling symlinks into this repo
 #
 # Layout:
 #   agents/*.md           → ~/.claude/agents/<name>.md
@@ -20,10 +21,18 @@
 #   - attic/   (intentional)
 #   - any pre-existing gstack* in ~/.claude/  (independent install)
 #   - hooks/README.md and anything else in hooks/ that is not *.js
+#   - skills/<name>/ with no SKILL.md   (not a valid skill; reported, not linked)
 #
 # Conflict handling:
 #   - Existing path that is NOT a symlink to our repo target → backup to <path>.bak.<ts> (unless --force)
 #   - Existing path that already points at our repo target → no-op (idempotent)
+#
+# Prune (--prune):
+#   - Detection always runs once --prune is passed, in both dry-run and --apply.
+#   - Scans ~/.claude/{agents,skills,commands,hooks} one level deep for symlinks
+#     whose target starts with this repo's path but no longer exists on disk.
+#   - Never touches non-symlinks (e.g. gstack's real directories) or symlinks
+#     pointing outside this repo. Deletion itself still requires --apply.
 #
 # Hooks/settings:
 #   - This script symlinks the hook SCRIPTS but never writes settings.json.
@@ -40,14 +49,16 @@ TS="$(date +%Y%m%d-%H%M%S)"
 MODE="dry-run"
 FORCE=false
 BACKUP=false
+PRUNE=false
 for arg in "$@"; do
   case "$arg" in
     --apply)    MODE="apply" ;;
     --dry-run)  MODE="dry-run" ;;
     --force)    FORCE=true ;;
     --backup)   BACKUP=true ;;
+    --prune)    PRUNE=true ;;
     -h|--help)
-      sed -n '2,31p' "$0"
+      sed -n '2,40p' "$0"
       exit 0 ;;
     *)
       echo "Unknown flag: $arg" >&2
@@ -167,6 +178,7 @@ skill_count=0
 for d in "$REPO_ROOT/skills"/*/; do
   [[ -d "$d" ]] || continue
   name="$(basename "$d")"
+  [[ -f "$d/SKILL.md" ]] || { printf '  ⊘ SKIP (no SKILL.md) %s\n' "$name"; continue; }
   link_one "${d%/}" "$CLAUDE_HOME/skills/$name"
   skill_count=$((skill_count + 1))
 done
@@ -222,11 +234,41 @@ if [[ "$hook_count" -gt 0 ]]; then
 fi
 echo
 
+# ===== Prune (--prune) =====
+PRUNE_CANDIDATES=0
+PRUNED=0
+if [[ "$PRUNE" == "true" ]]; then
+  echo "## prune (dangling symlinks under \$CLAUDE_HOME pointing into this repo)"
+  for sub in agents skills commands hooks; do
+    subdir="$CLAUDE_HOME/$sub"
+    [[ -d "$subdir" ]] || continue
+    while IFS= read -r -d '' link; do
+      target="$(readlink "$link")"
+      [[ "$target" == "$REPO_ROOT/"* ]] || continue
+      [[ -e "$target" ]] && continue
+      rel_link="${link#$CLAUDE_HOME/}"
+      PRUNE_CANDIDATES=$((PRUNE_CANDIDATES + 1))
+      if [[ "$MODE" == "apply" ]]; then
+        rm "$link"
+        printf '  ✂ PRUNED               ~/.claude/%s  (dead → repo/%s)\n' "$rel_link" "${target#$REPO_ROOT/}"
+        PRUNED=$((PRUNED + 1))
+      else
+        printf '  ✂ PRUNE (would remove) ~/.claude/%s  (dead → repo/%s)\n' "$rel_link" "${target#$REPO_ROOT/}"
+      fi
+    done < <(find "$subdir" -maxdepth 1 -type l -print0 2>/dev/null)
+  done
+  echo "    (candidates: $PRUNE_CANDIDATES, removed: $PRUNED)"
+  echo
+fi
+
 # ===== Summary =====
 echo "==> Summary"
 echo "    Items linked (would link):  $LINKED"
 echo "    Already symlinked (no-op):  $ALREADY_OK"
 echo "    Conflicts backed up:        $BACKED_UP"
+if [[ "$PRUNE" == "true" ]]; then
+  echo "    Dangling links pruned:      $PRUNED (candidates: $PRUNE_CANDIDATES)"
+fi
 echo
 if [[ "$MODE" == "dry-run" ]]; then
   echo "    (dry-run — no changes made; rerun with --apply to install)"

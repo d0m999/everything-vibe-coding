@@ -72,6 +72,11 @@ EOF
 
 mkdir -p "$OUT_DIR"
 
+# Idempotent rebuild: this script only ever emits, so a command removed from commands/
+# would otherwise leave its evc-command-<name>/ wrapper behind forever — not a dangling
+# symlink (the wrapper dir is real), so no --prune pass can ever catch it.
+rm -rf "$OUT_DIR"/evc-command-*/
+
 for f in "$REPO_ROOT/commands"/*.md; do
   [[ -e "$f" ]] || continue
   emit_wrapper "$f"

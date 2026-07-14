@@ -6,6 +6,7 @@
 #   ./install-codex.sh --apply           # create symlinks
 #   ./install-codex.sh --apply --backup  # backup ~/.codex before installing
 #   ./install-codex.sh --apply --force   # replace conflicting targets
+#   ./install-codex.sh --apply --prune   # also remove dangling symlinks into this repo
 #
 # Layout:
 #   skills/<name>/ -> $CODEX_HOME/skills/<name>/  (defaults to ~/.codex/skills)
@@ -17,6 +18,13 @@
 # Codex discovers skills from $CODEX_HOME/skills and deprecated custom prompt
 # slash commands from $CODEX_HOME/prompts. Installed command names appear as
 # skills named <name>; custom prompts, when supported, appear as /prompts:<name>.
+#
+# Prune (--prune):
+#   - Detection always runs once --prune is passed, in both dry-run and --apply.
+#   - Scans $CODEX_SKILLS_HOME and $CODEX_PROMPTS_HOME one level deep for symlinks
+#     whose target starts with this repo's path but no longer exists on disk.
+#   - Never touches non-symlinks or symlinks pointing outside this repo.
+#     Deletion itself still requires --apply.
 
 set -uo pipefail
 
@@ -29,14 +37,16 @@ TS="$(date +%Y%m%d-%H%M%S)"
 MODE="dry-run"
 FORCE=false
 BACKUP=false
+PRUNE=false
 for arg in "$@"; do
   case "$arg" in
     --apply) MODE="apply" ;;
     --dry-run) MODE="dry-run" ;;
     --force) FORCE=true ;;
     --backup) BACKUP=true ;;
+    --prune) PRUNE=true ;;
     -h|--help)
-      sed -n '2,15p' "$0"
+      sed -n '2,27p' "$0"
       exit 0 ;;
     *)
       echo "Unknown flag: $arg" >&2
@@ -199,11 +209,39 @@ fi
 echo "    (count: $command_skill_count)"
 echo
 
+PRUNE_CANDIDATES=0
+PRUNED=0
+if [[ "$PRUNE" == "true" ]]; then
+  echo "## prune (dangling symlinks under \$CODEX_HOME pointing into this repo)"
+  for subdir in "$CODEX_SKILLS_HOME" "$CODEX_PROMPTS_HOME"; do
+    [[ -d "$subdir" ]] || continue
+    while IFS= read -r -d '' link; do
+      target="$(readlink "$link")"
+      [[ "$target" == "$REPO_ROOT/"* ]] || continue
+      [[ -e "$target" ]] && continue
+      rel_link="${link#$CODEX_HOME/}"
+      PRUNE_CANDIDATES=$((PRUNE_CANDIDATES + 1))
+      if [[ "$MODE" == "apply" ]]; then
+        rm "$link"
+        printf '  PRUNED               ~/.codex/%s  (dead -> repo/%s)\n' "$rel_link" "${target#$REPO_ROOT/}"
+        PRUNED=$((PRUNED + 1))
+      else
+        printf '  PRUNE (would remove) ~/.codex/%s  (dead -> repo/%s)\n' "$rel_link" "${target#$REPO_ROOT/}"
+      fi
+    done < <(find "$subdir" -maxdepth 1 -type l -print0 2>/dev/null)
+  done
+  echo "    (candidates: $PRUNE_CANDIDATES, removed: $PRUNED)"
+  echo
+fi
+
 echo "==> Summary"
 echo "    Items linked (would link):  $LINKED"
 echo "    Already symlinked (no-op):  $ALREADY_OK"
 echo "    Conflicts backed up:        $BACKED_UP"
 echo "    Missing items skipped:      $SKIPPED_MISSING"
+if [[ "$PRUNE" == "true" ]]; then
+  echo "    Dangling links pruned:      $PRUNED (candidates: $PRUNE_CANDIDATES)"
+fi
 echo
 if [[ "$MODE" == "dry-run" ]]; then
   echo "    dry-run only; rerun with --apply to install"
