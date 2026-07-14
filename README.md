@@ -2,6 +2,16 @@
 
 个人精简版的 Claude Code 配置。从 [affaan-m/everything-claude-code](https://github.com/affaan-m/everything-claude-code)（下文简称 **ecc**）出发，按「能用上的才进来」原则裁剪；其他来源的 skill / agent 也欢迎引入。
 
+## 许可与来源（License & Attribution）
+
+本仓库使用 [MIT License](LICENSE)。
+
+部分内容 vendor 自以下同为 MIT 协议的上游项目（逐文件来源 commit 见 `docs/VENDORING-MANIFEST.md`，本地改动见 `docs/LOCAL-PATCHES.md`）：
+
+- [affaan-m/everything-claude-code](https://github.com/affaan-m/everything-claude-code)（ecc，MIT）— 本仓库绝大多数 skills / agents / commands 的来源
+- [haibindev/repo-scan](https://github.com/haibindev/repo-scan)（MIT）— `skills/repo-scan/`，经 ecc 转 vendor
+- [joaquinhuigomez/agent-eval](https://github.com/joaquinhuigomez/agent-eval)（MIT）— `skills/agent-eval/`，经 ecc 转 vendor
+
 ## 为什么有这个 repo
 
 ecc 太全 — 500+ skills、几十个 agent、覆盖几十种技术栈。对我而言：
@@ -32,15 +42,12 @@ ecc 太全 — 500+ skills、几十个 agent、覆盖几十种技术栈。对我
 ├── agents/                   # 启用的 agents
 ├── commands/                 # 启用的 commands
 ├── hooks/                    # 启用的 hooks
-├── rules/                    # rules/ 配置
-├── settings/                 # settings.json 片段(可选)
 ├── attic/                    # 下架但留底（不参与 install）
-├── docs/
-│   ├── SELECTION-v1.md       # v1 白名单及评分（问卷产出）
-│   ├── UPSTREAM.md           # 上游变更评估日志
-│   ├── SOURCES.md            # 多来源追踪（ecc + 其他 repo）
-│   └── LOCAL-PATCHES.md      # 对 vendored 内容的本地修改清单
-└── CHANGELOG.md
+└── docs/
+    ├── SELECTION-v1.md       # v1 白名单及评分（问卷产出）
+    ├── UPSTREAM.md           # 上游变更评估日志
+    ├── SOURCES.md            # 多来源追踪（ecc + 其他 repo）
+    └── LOCAL-PATCHES.md      # 对 vendored 内容的本地修改清单
 ```
 
 ## 安装

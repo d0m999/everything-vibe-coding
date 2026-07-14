@@ -5,6 +5,12 @@
 > **基线**：ecc plugin `2.0.0-rc.1`（marketplace 路径 `~/.claude/plugins/marketplaces/ecc/`）
 > **生成日期**：2026-05-16
 > **Review 状态**：用户已 review 6/6 项（见文末），数字按最终决议）
+> **License**：本 manifest 列出的全部 agents/skills/commands 均为 **MIT**（查证于 2026-07-14，见 `README.md` 的「许可与来源」段）。下表单独标注两项经由 ecc 转 vendor、但原始上游是另一个仓库的 skill；除此之外的所有条目原始上游即 ecc 本身。
+
+| 组件 | 类型 | 原始上游 repo | license |
+|---|---|---|---|
+| `repo-scan` | skill | [haibindev/repo-scan](https://github.com/haibindev/repo-scan) | MIT |
+| `agent-eval` | skill | [joaquinhuigomez/agent-eval](https://github.com/joaquinhuigomez/agent-eval) | MIT |
 
 ## 概览
 
