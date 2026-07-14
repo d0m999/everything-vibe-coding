@@ -74,23 +74,22 @@ SKILLS=(
   fastapi-patterns            mle-workflow                 prompt-optimizer
   python-patterns             python-testing               pytorch-patterns
   remotion-video-creation     videodb
-  # Agent 工程 (15)
+  # Agent 工程 (13)
   agent-architecture-audit       agent-eval
   agent-harness-construction     agent-introspection-debugging
   agentic-engineering            agentic-os
   ai-regression-testing          autonomous-agent-harness
   autonomous-loops               continuous-agent-loop
-  continuous-learning            continuous-learning-v2
   eval-harness                   ralphinho-rfc-pipeline
   verification-loop
-  # 通用工作流 (23)
+  # 通用工作流 (22)
   api-design                  architecture-decision-records
   canary-watch                clickhouse-io
   codebase-onboarding         coding-standards
   database-migrations         deployment-patterns
   docker-patterns             documentation-lookup
-  error-handling              gateguard
-  hexagonal-architecture      hookify-rules
+  error-handling              hexagonal-architecture
+  hookify-rules
   plankton-code-quality       postgres-patterns
   redis-patterns              repo-scan
   safety-guard                security-bounty-hunter
@@ -101,16 +100,14 @@ SKILLS=(
 )
 
 COMMANDS=(
-  build-fix         code-review        cost-report
-  ecc-guide         fastapi-review     harness-audit
+  build-fix         code-review        fastapi-review
   hookify           hookify-configure  hookify-help
   hookify-list      learn              learn-eval
   loop-start        loop-status        model-route
-  plan              plan-prd           prune
-  python-review     refactor-clean     rust-build
-  rust-review       rust-test          security-scan
-  skill-create      skill-health       test-coverage
-  update-codemaps   update-docs
+  plan              plan-prd           python-review
+  refactor-clean    rust-build         rust-review
+  rust-test         security-scan      skill-create
+  test-coverage     update-codemaps    update-docs
 )
 
 # ===== Counters =====

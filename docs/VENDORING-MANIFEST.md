@@ -30,6 +30,28 @@ Post-v1 本地原创项：
 
 - `video-extract` (skill) — **本地原创 skill**，源 `~/.claude/skills/video-extract/`，纳入本 repo `skills/video-extract/`。用途：视频内容抽取、字幕/转写、YouTube 403 / SABR / PO-token 时的真实浏览器播放、跳帧截图与音频兜底。它不是 ecc vendor 项，不写 `Source: ecc...` 注释。
 
+## Post-v1 移除（2026-07-14）
+
+> 下面的 v1 清单是 **2026-05-16 那次 vendor 的历史记录，原样保留不改**。本节记录此后从 repo 中移除的组件 —— 读清单时请一并参照本节。
+>
+> `scripts/vendor-from-ecc.sh` 的 `SKILLS` / `COMMANDS` 数组**已同步删掉这些名字**，否则重跑脚本会把它们复活。
+
+移除 7 项（v1 keep 135 → 128）：
+
+| 组件 | 类型 | 移除原因 |
+|---|---|---|
+| `ecc-guide` | command | 导航 ECC 的 `agent.yaml` / `manifests/` / `hooks/hooks.json` / `scripts/ci/catalog.js` —— 本 repo 一样都没有 |
+| `cost-report` | command | 查 `~/.claude-cost-tracker/usage.db`，该库不存在，repo 里也没有任何东西会写它 |
+| `harness-audit` | command | 调 `node scripts/harness-audit.js`，引擎在 ECC 的 scripts/ 树里，从未 vendor |
+| `skill-health` | command | 调 `$ECC_ROOT/scripts/skills-health.js`，`ECC_ROOT` 已不存在 |
+| `prune` | command | 纯 continuous-learning-v2 命令，随其一起移除 |
+| `gateguard` | skill | SKILL.md 声称包含 `scripts/hooks/gateguard-fact-force.js`（1278 行），该脚本从未 vendor —— 它从未拦截过任何一次调用。实际拦截由 `hooks/quality-gate.js` + `hooks/config-protection.js` 承担 |
+| `continuous-learning-v2` | skill | 从未运行（hooks 未注册、instinct 存储目录不存在、59 天零 instinct）。同时是 repo 唯一的真实安全债：`instinct-cli.py` 抓取用户提供的 URL 并把响应变成注入 Claude 上下文的 instinct |
+
+`continuous-learning`（v1）也从 vendor 脚本的 `SKILLS` 数组移除 —— 它从未真正 vendor 进来，但脚本仍列着它，重跑会把 instinct 系统装回来。
+
+三个死命令（`cost-report` / `harness-audit` / `skill-health`）选择**移除而非补 vendor 引擎**：三者都依赖 ECC 的 `scripts/` 树，而「零依赖、不依赖 plugin / node_modules / ECC root 解析」正是 commit 3eccc53 的明确设计目标。
+
 ## 归类修正（v1 selection 阶段错误）
 
 | 项 | 误归 | 实际 |
