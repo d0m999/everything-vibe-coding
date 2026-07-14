@@ -2,7 +2,7 @@
 name: eval-harness
 description: Formal evaluation framework for Claude Code sessions implementing eval-driven development (EDD) principles
 origin: ECC
-tools: Read, Write, Edit, Bash, Grep, Glob
+allowed-tools: Read, Write, Edit, Bash, Grep, Glob
 ---
 <!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from skills/eval-harness/SKILL.md -->
 
