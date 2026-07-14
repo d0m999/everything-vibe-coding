@@ -1,8 +1,19 @@
 # Local Patches
 
+> **规则**：vendored skill 正文中不得包含任何**写入** `~/.claude/` 的安装指令（`cp`/`ln`/`mkdir`/`git clone` 落盘）——安装是 `install.sh` 的唯一职责。措辞限定为"写入"：`skill-stocktake` / `skill-scout` / `skill-comply` 都合法地**读取** `~/.claude/skills/`，一刀切会误伤。
+
 > 对 vendored 文件的本地修改清单。每行格式：日期 | 文件路径 | 修改概要 | 原因。
 >
 > 用途：将来从上游同步新版本时识别需要 re-apply 的修改点。
+
+## 2026-07-14 — P0 安装面闭环整改
+
+来源：对照 `obra/superpowers` 的结构审计（160-agent 工作流）。修复"仓库有、但没装进 harness"和"vendored skill 正文自我覆盖仓库"两类问题，详见 `PLAN-P0.md`。
+
+| 日期 | 文件 | 修改 | 原因 |
+|---|---|---|---|
+| 2026-07-14 | `skills/repo-scan/SKILL.md` | 删除 `## Installation` 段落中写入 `~/.claude/` 的 bash 块（`mkdir -p ~/.claude/skills/repo-scan` + `git clone` + `cp -r . ~/.claude/skills/repo-scan`），替换为镜像 `skills/agent-eval/SKILL.md` 的一行式 Note | `~/.claude/skills/repo-scan` 是指回本仓库的 symlink；agent 若照做该段会把上游内容重新 clone 后写回本仓库，是一段自我覆盖的安装指令 |
+| 2026-07-14 | `LICENSE`（新建）、`README.md`（加「许可与来源」段）、`docs/VENDORING-MANIFEST.md`（加 license 表） | 查证仓库是 PUBLIC 且 `licenseInfo: null`；三个被 vendor 的上游来源（ecc 本身、`haibindev/repo-scan`、`joaquinhuigomez/agent-eval`）经 `gh api repos/.../--jq .license` 逐一核实均为 MIT；新建 MIT LICENSE（Copyright d0m999），README 顶部加 Attribution 段，VENDORING-MANIFEST.md 加一张标注非 ecc-native 上游（repo-scan/agent-eval）的 license 小表 | PLAN-P0.md Task 7；公开仓库重分发 ~110 个 vendored 文件却无 LICENSE，需先查证上游条款是否允许 |
 
 ## 2026-07-14 — 存量悬空引用清理（222 行 → 93 行）
 
