@@ -14,17 +14,21 @@
 #   commands/*.md         → ~/.claude/commands/<name>.md
 #   commands/local/ralph-init.md → ~/.claude/commands/ralph-init.md
 #   commands/local/ralph-init/   → ~/.claude/commands/ralph-init/   (directory symlink)
+#   hooks/*.js            → ~/.claude/hooks/<name>.js
 #
 # Skipped:
 #   - attic/   (intentional)
 #   - any pre-existing gstack* in ~/.claude/  (independent install)
+#   - hooks/README.md and anything else in hooks/ that is not *.js
 #
 # Conflict handling:
 #   - Existing path that is NOT a symlink to our repo target → backup to <path>.bak.<ts> (unless --force)
 #   - Existing path that already points at our repo target → no-op (idempotent)
 #
 # Hooks/settings:
-#   - This script does not write settings.json or install hooks. Manage them yourself.
+#   - This script symlinks the hook SCRIPTS but never writes settings.json.
+#     A symlinked script does nothing until it is registered as a hook.
+#     Registration snippet: hooks/README.md
 
 set -uo pipefail   # no -e: some checks return non-zero by design
 
@@ -43,7 +47,7 @@ for arg in "$@"; do
     --force)    FORCE=true ;;
     --backup)   BACKUP=true ;;
     -h|--help)
-      sed -n '2,30p' "$0"
+      sed -n '2,31p' "$0"
       exit 0 ;;
     *)
       echo "Unknown flag: $arg" >&2
@@ -115,7 +119,7 @@ echo "    BACKUP:       $BACKUP"
 echo
 
 # Sanity: repo must have what install expects
-for d in agents skills commands; do
+for d in agents skills commands hooks; do
   if [[ ! -d "$REPO_ROOT/$d" ]]; then
     echo "ERROR: missing $REPO_ROOT/$d" >&2
     exit 1
@@ -142,7 +146,7 @@ fi
 
 # ===== Ensure target subdirs =====
 if [[ "$MODE" == "apply" ]]; then
-  mkdir -p "$CLAUDE_HOME/agents" "$CLAUDE_HOME/skills" "$CLAUDE_HOME/commands"
+  mkdir -p "$CLAUDE_HOME/agents" "$CLAUDE_HOME/skills" "$CLAUDE_HOME/commands" "$CLAUDE_HOME/hooks"
 fi
 
 # ===== agents/ =====
@@ -201,6 +205,21 @@ if [[ -d "$REPO_ROOT/commands/local" ]]; then
   done
 fi
 echo "    (count: $local_count)"
+echo
+
+# ===== hooks/ (scripts only — settings.json registration stays manual) =====
+echo "## hooks/ (*.js)"
+hook_count=0
+for f in "$REPO_ROOT/hooks"/*.js; do
+  [[ -e "$f" ]] || continue
+  name="$(basename "$f")"
+  link_one "$f" "$CLAUDE_HOME/hooks/$name"
+  hook_count=$((hook_count + 1))
+done
+echo "    (count: $hook_count)"
+if [[ "$hook_count" -gt 0 ]]; then
+  echo "    NOTE: linked scripts are inert until registered in settings.json — see hooks/README.md"
+fi
 echo
 
 # ===== Summary =====
