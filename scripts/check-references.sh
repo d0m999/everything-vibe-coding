@@ -7,6 +7,11 @@
 #   - Skips short names (< 7 chars) to avoid false positives on common words
 #
 # Run after vendor-from-ecc.sh --apply, before install.sh.
+#
+# Exit codes:
+#   0 = clean (no dangling references)
+#   1 = dangling references found
+#   2 = check did not run (ECC_ROOT missing or ecc name set empty)
 
 set -uo pipefail   # NOTE: no -e — grep returning 1 on no match is normal
 
@@ -20,7 +25,9 @@ cd "$REPO_ROOT"
 KEEP_FILE="/tmp/v1-keep.$$"
 {
   ls agents/*.md 2>/dev/null   | xargs -n1 basename | sed 's/\.md$//'
-  ls -d skills/*/ 2>/dev/null  | xargs -n1 basename
+  # Only directories with a SKILL.md count as real skills — an empty shell would
+  # otherwise be treated as legitimate and open a hole in the dangling-ref check.
+  for d in skills/*/; do [[ -f "${d}SKILL.md" ]] && basename "$d"; done
   ls commands/*.md 2>/dev/null | xargs -n1 basename | sed 's/\.md$//'
   echo "plan-orchestrate"
   echo "ralph-init"
@@ -37,6 +44,16 @@ ECC_FILE="/tmp/ecc-all.$$"
 } | sort -u > "$ECC_FILE"
 
 ECC_COUNT=$(wc -l < "$ECC_FILE" | tr -d ' ')
+
+# ===== Pre-flight =====
+# A missing ECC_ROOT (or an empty ecc name set) means the scan never actually ran —
+# mirror scripts/vendor-from-ecc.sh:207-211's hard failure instead of silently
+# reporting "no dangling references detected" for a check that didn't execute.
+if [[ ! -d "$ECC_ROOT" || "$ECC_COUNT" -eq 0 ]]; then
+  echo "ERROR: check did not run — ECC_ROOT missing or empty: $ECC_ROOT" >&2
+  rm -f "$KEEP_FILE" "$ECC_FILE"
+  exit 2
+fi
 
 # ===== Drop set = ecc - keep =====
 DROP_FILE="/tmp/v1-drop.$$"
