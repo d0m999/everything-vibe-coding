@@ -1,6 +1,6 @@
 ---
 description: Run AgentShield against agent, hook, MCP, permission, and secret surfaces.
-agent: everything-claude-code:security-reviewer
+agent: security-reviewer
 subtask: true
 ---
 <!-- Source: ecc@2.0.0-rc.1, vendored on 2026-05-16 from commands/security-scan.md -->
