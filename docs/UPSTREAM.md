@@ -5,7 +5,12 @@
 > 要么是本仓库自己代码/测试里的内部标识符，要么是对真实存在的本地事物的正确指代。
 > 与之相对的"真悬空引用"修复记录见 `docs/LOCAL-PATCHES.md`。
 
-生成于 2026-07-14，对应 `bash scripts/check-references.sh --verbose` 清理后的剩余命中（13 个 drop 名字，98 行）。
+生成于 2026-07-14，对应 `bash scripts/check-references.sh --verbose` 清理后的剩余命中（13 个 drop 名字，93 行）。
+
+> 数字必须用**干净 checkout** 复现（`git worktree add` 一个 detached HEAD 再跑）。早先版本记的
+> 98 行 / `sessions`=34 / `projects`=28 / `promote`=5 是在脏工作区量的：当时脚本会把 gitignored 的
+> `__pycache__/*.pyc` 当成 "Binary file matches" 计入命中，数字因此取决于谁的机器在跑。
+> `check-references.sh` 现已加 `-I --exclude-dir=__pycache__`（等）堵掉这个口子，脏/净工作区结果一致。
 
 ## 通用词撞名（高 count，非组件引用）
 
@@ -14,10 +19,10 @@
 
 | 名字 | count | 典型命中 | 为什么是假阳性 |
 |---|---|---|---|
-| `sessions` | 34 | "Claude Code sessions", "long sessions", "across sessions" | 全部是"会话"这个词的自然语言用法，没有一处是 `/sessions` 命令调用 |
-| `projects` | 28 | "across projects", "data/projects/\*.json", "Global skills (all projects)" | 全部是"项目"这个词或本地路径片段，没有一处是 `/projects` 命令调用 |
+| `sessions` | 32 | "Claude Code sessions", "long sessions", "across sessions" | 全部是"会话"这个词的自然语言用法，没有一处是 `/sessions` 命令调用 |
+| `projects` | 26 | "across projects", "data/projects/\*.json", "Global skills (all projects)" | 全部是"项目"这个词或本地路径片段，没有一处是 `/projects` 命令调用 |
 | `checkpoint` | 12 | PyTorch `torch.load(checkpoint)`、"mental checkpoint"、git 场景的检查点 | 全部是训练检查点/口语检查点，没有一处是 `/checkpoint` 命令调用 |
-| `promote` | 5 | Python 变量名 `promote = []`（`skill-comply/scripts/report.py`）、"Vercel: promote previous deployment" | 全部是英文动词或代码变量名，没有一处是 `/promote` 命令调用 |
+| `promote` | 4 | Python 变量名 `promote = []`（`skill-comply/scripts/report.py`）、"Vercel: promote previous deployment" | 全部是英文动词或代码变量名，没有一处是 `/promote` 命令调用 |
 | `benchmark` | 4 | "benchmark score"（选库时的匹配度打分）、`torch.backends.cudnn.benchmark`、"CIS AWS Foundations Benchmark" | 全部是"基准/评分"这个词的自然语言或第三方 API 用法，不是 gstack `/benchmark` skill |
 
 ## 本仓库内部标识符（非外部引用）
@@ -36,6 +41,6 @@
 
 ## 处理原则
 
-- 以上 13 个名字、98 行命中**保持原样，不做修改**。
+- 以上 13 个名字、93 行命中**保持原样，不做修改**。
 - 若未来 `scripts/check-references.sh` 的 `v1 keep set` 发生变化（比如真的 vendor 了 `benchmark`/`quality-gate`/`git-workflow` 对应的 ECC 组件），需要重新核实这份清单是否仍然成立。
 - 本文档与 `docs/LOCAL-PATCHES.md` 的"未处理的 dangling refs（接受现状）"章节是同一批工作的两个产物：`LOCAL-PATCHES.md` 记录 2026-07-14 这轮做了哪些修改，本文档记录为什么剩下的不用改。
