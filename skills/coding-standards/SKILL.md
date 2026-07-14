@@ -324,7 +324,7 @@ export async function POST(request: Request) {
       return NextResponse.json({
         success: false,
         error: 'Validation failed',
-        details: error.errors
+        details: error.issues
       }, { status: 400 })
     }
   }
@@ -417,7 +417,7 @@ import { useMemo, useCallback } from 'react'
 
 // PASS: GOOD: Memoize expensive computations
 const sortedMarkets = useMemo(() => {
-  return markets.sort((a, b) => b.volume - a.volume)
+  return [...markets].sort((a, b) => b.volume - a.volume)
 }, [markets])
 
 // PASS: GOOD: Memoize callbacks
