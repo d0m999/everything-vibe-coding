@@ -100,7 +100,6 @@ Special angles:
 - `build-error-resolver` (generic fallback)
 
 Framework-specific reviewers + build resolvers:
-- `django-reviewer` / `django-build-resolver`
 - `fastapi-reviewer`
 - `mle-reviewer` / `pytorch-build-resolver` — ML/training/inference pipelines
 
@@ -108,7 +107,6 @@ Language-specific reviewers + build resolvers:
 - `python-reviewer`
 - `typescript-reviewer`
 - `swift-reviewer` / `swift-build-resolver`
-- `rust-reviewer` / `rust-build-resolver`
 
 Tools / workflow:
 - `loop-operator` — long-running autonomous loops
@@ -118,7 +116,7 @@ Docs:
 - `doc-updater` — documentation, codemap, README
 - `docs-lookup` — third-party library API lookups (Context7)
 
-A misspelled agent name fails the Agent tool with `InputValidationError`. Cross-check against this list before emitting. **Not in this catalogue** (do not emit): `architect` (use `code-architect`), `e2e-runner` (E2E goes through gstack `/qa`), `chief-of-staff`, `cpp-*` / `go-*` / `java-*` / `kotlin-*` / `flutter-*` reviewers and build resolvers (those languages are out of v1 scope).
+A misspelled agent name fails the Agent tool with `InputValidationError`. Cross-check against this list before emitting. **Not in this catalogue** (do not emit): `architect` (use `code-architect`), `e2e-runner` (E2E goes through gstack `/qa`), `chief-of-staff`, `django-reviewer` / `django-build-resolver`, `rust-reviewer` / `rust-build-resolver` (archived to `attic/` — see `docs/SELECTION-v1.md`), `cpp-*` / `go-*` / `java-*` / `kotlin-*` / `flutter-*` reviewers and build resolvers (those languages are out of v1 scope).
 
 ## How It Works
 
@@ -131,11 +129,10 @@ A misspelled agent name fails the Agent tool with `InputValidationError`. Cross-
    - **Polyglot tie-break**: if more than one marker matches, pick the language whose source files outnumber the others (count via `git ls-files`, excluding `vendor/`, `node_modules/`, `dist/`, `build/`, `.venv/`, generated files, and obvious test fixtures). On a tie or when no language exceeds 60% of source files, set `lang=unknown`.
    - No marker matched → set `lang=unknown`.
    - `lang=unknown` is a sentinel — it is **not** an agent name. Phase 2 composition rules turn it into `code-reviewer` / `build-error-resolver` at chain composition time.
-4. **Detect Python sub-profile** when `lang=python`. Set `py_sub` to one of `{mle, django, fastapi, generic}` using the first match below:
+4. **Detect Python sub-profile** when `lang=python`. Set `py_sub` to one of `{mle, fastapi, generic}` using the first match below:
    - `mle`: `pyproject.toml` / `requirements.txt` / `uv.lock` declares `torch` OR plan text contains `pytorch`, `training`, `dataloader`, `fine-tune`, `lora`. Reviewer: `mle-reviewer`. Build resolver: `pytorch-build-resolver`.
-   - `django`: top-level `manage.py` exists AND `django` is a declared dep, OR plan text contains `django`, `DRF`, `celery`, `orm migration`. Reviewer: `django-reviewer`. Build resolver: `django-build-resolver`.
    - `fastapi`: `fastapi` is a declared dep, OR plan text contains `fastapi`, `pydantic`, `asgi`. Reviewer: `fastapi-reviewer`. Build resolver: `build-error-resolver` (no fastapi-build-resolver in v1).
-   - `generic` (default): no specific framework detected. Reviewer: `python-reviewer`. Build resolver: `build-error-resolver`.
+   - `generic` (default; also covers Django and any other framework with no dedicated agent in v1 — `django-reviewer`/`django-build-resolver` were archived, see catalogue exclusions): no ML or FastAPI signal detected. Reviewer: `python-reviewer`. Build resolver: `build-error-resolver`.
 
 ### Phase 1 — Decompose steps
 
@@ -182,20 +179,18 @@ Chain composition rules:
 5. **`<lang>-reviewer` resolution**:
    - `lang=python` → check `py_sub` (Phase 0 step 4):
      - `py_sub=mle` → `mle-reviewer`
-     - `py_sub=django` → `django-reviewer`
      - `py_sub=fastapi` → `fastapi-reviewer`
      - `py_sub=generic` → `python-reviewer`
    - `lang=typescript` → `typescript-reviewer`
    - `lang=swift` → `swift-reviewer`
-   - `lang=rust` → `rust-reviewer`
+   - `lang=rust` → `code-reviewer` (no rust-reviewer vendored in v1 — see catalogue exclusions)
    - `lang=unknown` → `code-reviewer`
 6. **`<lang>-build-resolver` resolution**:
    - `lang=python` → check `py_sub`:
      - `py_sub=mle` → `pytorch-build-resolver`
-     - `py_sub=django` → `django-build-resolver`
      - `py_sub=fastapi` or `py_sub=generic` → `build-error-resolver`
    - `lang=swift` → `swift-build-resolver`
-   - `lang=rust` → `rust-build-resolver`
+   - `lang=rust` → `build-error-resolver` (no rust-build-resolver vendored in v1 — see catalogue exclusions)
    - `lang=typescript` or `lang=unknown` → `build-error-resolver`
 7. **Zero-tag steps**: if no trigger word matches, set chain to `code-reviewer` and write `no tag matched; default review-only chain` under "Chain rationale".
 8. Chain length ≤ 4 after deduplication. If exceeded, drop weakest tag (`lookup` and `docs` first).
