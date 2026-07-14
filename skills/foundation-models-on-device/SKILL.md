@@ -123,15 +123,21 @@ struct RecipeSearchTool: Tool {
         var numberOfResults: Int
     }
 
-    func call(arguments: Arguments) async throws -> ToolOutput {
+    func call(arguments: Arguments) async throws -> String {
         let recipes = await searchRecipes(
             term: arguments.searchTerm,
             limit: arguments.numberOfResults
         )
-        return .string(recipes.map { "- \($0.name): \($0.description)" }.joined(separator: "\n"))
+        return recipes.map { "- \($0.name): \($0.description)" }.joined(separator: "\n")
     }
 }
 ```
+
+`Tool.call` returns `Output`, an associated type constrained to `PromptRepresentable` —
+return `String` directly. There is no top-level `ToolOutput` type; the only `ToolOutput`
+in the framework is `Transcript.ToolOutput`, which models a transcript entry, not a return
+value. `Arguments` must be `@Generable` so the macro can synthesize the `GenerationSchema`
+the protocol requires.
 
 ### 2. Create Session with Tools
 
@@ -170,10 +176,15 @@ let stream = session.streamResponse(
 )
 
 for try await partial in stream {
-    // partial: TripIdeas.PartiallyGenerated (all properties Optional)
-    print(partial)
+    // partial: LanguageModelSession.ResponseStream<TripIdeas>.Snapshot
+    // partial.content: TripIdeas.PartiallyGenerated (all properties Optional)
+    print(partial.content)
 }
 ```
+
+The stream element is a `Snapshot`, not the partial value itself. Reach the generated
+content through `partial.content`; `partial.rawContent` gives the underlying
+`GeneratedContent` when you need the untyped form.
 
 ### SwiftUI Integration
 
@@ -194,7 +205,7 @@ var body: some View {
         do {
             let stream = session.streamResponse(to: prompt, generating: TripIdeas.self)
             for try await partial in stream {
-                partialResult = partial
+                partialResult = partial.content
             }
         } catch {
             errorMessage = error.localizedDescription
