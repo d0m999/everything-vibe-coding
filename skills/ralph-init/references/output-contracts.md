@@ -103,9 +103,9 @@
 执行：
 
 ```bash
-python3 ~/.claude/skills/ralph-init/scripts/validate_prd.py .ralph/prd.json
-python3 ~/.claude/skills/ralph-init/scripts/validate_prompt.py .ralph/PROMPT.md
-python3 ~/.claude/skills/ralph-init/scripts/validate_ralph.py ralph.sh
+python3 "<命令资源目录>/scripts/validate_prd.py" .ralph/prd.json
+python3 "<命令资源目录>/scripts/validate_prompt.py" .ralph/PROMPT.md
+python3 "<命令资源目录>/scripts/validate_ralph.py" ralph.sh
 ```
 
 任何失败都必须先修复，再汇报结果。

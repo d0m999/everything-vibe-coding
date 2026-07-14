@@ -16,7 +16,16 @@
 | 2026-07-14 | `skills/ralph-init/SKILL.md`、`skills/ralph-init/references/output-contracts.md` | 4 处硬编码 `~/.claude/commands/ralph-init/...` 改成 `~/.claude/skills/ralph-init/...`（SKILL.md 正文 1 处 + output-contracts.md 里 3 个 `python3` 校验命令） | 安装后的真实路径从 `~/.claude/commands/ralph-init` 变成 `~/.claude/skills/ralph-init`；迁移后跑了 `scripts/run_fixtures.sh`，21/21 通过 |
 | 2026-07-14 | `commands/learn.md`（删除，未迁移） | 没有生成 `skills/learn/`；直接删掉 `commands/learn.md`，不迁移 | `install.sh` 干跑发现 `~/.claude/skills/learn` 已经是 gstack 插件的 `/learn`（"Manage project learnings"，真实文件在 `~/.claude/skills/gstack/learn/`），不是指回本仓库的 symlink。同名 skill 优先于 command 的规则下，本仓库的 `/learn`（"提取本次会话可复用模式"）今天就已经被 gstack 遮蔽、实际不可达；迁移只会把"哑冲突"变成"`install.sh --apply` 强制 backup 并覆盖 gstack 目录"的真冲突。用户确认：功能已被 gstack 版本取代，直接删，不改名保留 |
 
-灰度期间 `~/.claude/commands/{learn,security-scan}.md` 这两条 symlink 会变成悬空（源文件已删）；`install.sh --prune` 会在下一次 `--apply --prune` 时自动清掉，不需要手工处理。
+灰度期间 `~/.claude/commands/learn.md` 这条 symlink 会变成悬空（源文件已删）；`install.sh --prune` 会在下一次 `--apply --prune` 时自动清掉，不需要手工处理。`security-scan` 的悬空问题已在下一节的 Codex review 修复中撤销（恢复了 `commands/security-scan.md`）。
+
+## 2026-07-14 — Codex review（对 c5ce7cf 的独立复核）修复
+
+来源：`/codex review c5ce7cf` 对上一节迁移提交的独立复核，发现两处安装管线断裂（均为 P2，非阻断）。
+
+| 日期 | 文件 | 修改 | 原因 |
+|---|---|---|---|
+| 2026-07-14 | `commands/security-scan.md`（恢复，逐字节还原 c5ce7cf 之前的版本） | 撤销上一节"删除 `commands/security-scan.md`"的决定，把文件原样恢复 | `scripts/generate-codex-command-skills.sh` 只扫描 `commands/*.md` 来生成 Codex 端的 skill wrapper（`.agents/skills/evc-command-<name>/`），对新的 `skills/*/SKILL.md` 完全无感知。删除 `commands/security-scan.md` 后，Claude Code 侧或许还能靠 skill 名匹配继续解析 `/security-scan`，但 Codex 侧的 wrapper 会在下次 `generate-codex-command-skills.sh`（该脚本每次都无条件 `rm -rf "$OUT_DIR"/evc-command-*/` 再重建）后彻底消失且不会再生成——这是真实功能回归，不是误报。跟其余 23 个迁移文件一样，Phase 1 期间接受 `commands/security-scan.md` 与 `skills/security-scan/SKILL.md` 内容重叠（前者是原始 `/security-scan` 工作流文档，后者是合并后的 AgentShield 参考文档+工作流），重复内容的收敛留给 Phase 2 统一处理，不在这里提前解决 install.sh/生成脚本的架构问题 |
+| 2026-07-14 | `skills/ralph-init/references/output-contracts.md` | 把「生成后必做」段的 3 条 `python3 ~/.claude/skills/ralph-init/scripts/validate_*.py` 硬编码路径改成 `python3 "<命令资源目录>/scripts/validate_*.py"`，和 `SKILL.md:114-116` 已有的动态解析方式对齐 | 上一节的修复只是把路径从 `~/.claude/commands/ralph-init` 改成了 `~/.claude/skills/ralph-init`，但仍然写死成 Claude Code 专用路径；`SKILL.md:33` 明确定义了 Codex 环境下资源目录是 `~/.codex/prompts/ralph-init`，纯 Codex-only 安装场景下按 output-contracts.md 原文跑校验命令会因为脚本路径不存在而失败。改完后已用 `bash "<命令资源目录>/scripts/run_fixtures.sh"`（Claude Code 侧路径）跑过回归 |
 
 ## 2026-07-14 — P0 安装面闭环整改
 
