@@ -11,7 +11,8 @@
 #   ECC_VERSION — ecc version label (default: read from $ECC_ROOT/VERSION)
 #   DATE        — vendoring date (default: today YYYY-MM-DD)
 #
-# Manifest = v1 keep: 31 agents + 73 skills + 29 commands (= 133 from ecc).
+# Manifest = v1 keep, excluding everything archived to attic/. Counts are derived from the
+# arrays at runtime and printed in the summary — never hardcoded here, so they cannot drift.
 # `plan-orchestrate` and `ralph-init` are handled separately (see VENDORING-MANIFEST.md).
 
 set -euo pipefail
@@ -37,7 +38,7 @@ for arg in "$@"; do
     --dry-run) MODE="dry-run" ;;
     --force)   FORCE=true ;;
     -h|--help)
-      sed -n '2,14p' "$0"
+      sed -n '2,16p' "$0"
       exit 0 ;;
     *)
       echo "Unknown flag: $arg" >&2
@@ -49,34 +50,25 @@ done
 AGENTS=(
   a11y-architect          build-error-resolver    code-architect
   code-explorer           code-reviewer           code-simplifier
-  comment-analyzer        database-reviewer       django-build-resolver
-  django-reviewer         doc-updater             docs-lookup
-  fastapi-reviewer        harness-optimizer       loop-operator
-  mle-reviewer            performance-optimizer   planner
-  pr-test-analyzer        python-reviewer         pytorch-build-resolver
-  refactor-cleaner        rust-build-resolver     rust-reviewer
-  security-reviewer       silent-failure-hunter   swift-build-resolver
-  swift-reviewer          tdd-guide               type-design-analyzer
-  typescript-reviewer
+  comment-analyzer        database-reviewer       doc-updater
+  docs-lookup             fastapi-reviewer        harness-optimizer
+  loop-operator           mle-reviewer            performance-optimizer
+  planner                 pr-test-analyzer        python-reviewer
+  pytorch-build-resolver  refactor-cleaner        security-reviewer
+  silent-failure-hunter   swift-build-resolver    swift-reviewer
+  tdd-guide               type-design-analyzer    typescript-reviewer
 )
 
 SKILLS=(
-  # TS / 前端 (17)
-  accessibility               bun-runtime                  design-system
-  frontend-design-direction   frontend-patterns            frontend-slides
-  make-interfaces-feel-better motion-advanced
-  motion-foundations          motion-patterns              motion-ui
-  nestjs-patterns             nextjs-turbopack             nuxt4-patterns
-  ui-demo                     ui-to-vue                    vite-patterns
+  # TS / 前端 (5)
+  accessibility               design-system                frontend-design-direction
+  frontend-patterns           make-interfaces-feel-better
   # Swift / iOS (6)
   swiftui-patterns             swift-concurrency-6-2       swift-actor-persistence
   swift-protocol-di-testing    foundation-models-on-device liquid-glass-design
-  # Python / AI (14)
-  django-celery               django-patterns              django-security
-  django-tdd                  django-verification          fal-ai-media
+  # Python / AI (6)
   fastapi-patterns            mle-workflow                 prompt-optimizer
   python-patterns             python-testing               pytorch-patterns
-  remotion-video-creation     videodb
   # Agent 工程 (13)
   agent-architecture-audit       agent-eval
   agent-harness-construction     agent-introspection-debugging
@@ -85,19 +77,17 @@ SKILLS=(
   autonomous-loops               continuous-agent-loop
   eval-harness                   ralphinho-rfc-pipeline
   verification-loop
-  # 通用工作流 (22)
+  # 通用工作流 (20)
   api-design                  architecture-decision-records
-  canary-watch                clickhouse-io
-  codebase-onboarding         coding-standards
-  database-migrations         deployment-patterns
-  docker-patterns             documentation-lookup
-  error-handling              hexagonal-architecture
-  hookify-rules
+  canary-watch                codebase-onboarding
+  coding-standards            database-migrations
+  deployment-patterns         docker-patterns
+  documentation-lookup        error-handling
+  hexagonal-architecture      hookify-rules
   plankton-code-quality       postgres-patterns
   redis-patterns              repo-scan
-  safety-guard                security-bounty-hunter
-  security-review             security-scan
-  strategic-compact
+  safety-guard                security-review
+  security-scan               strategic-compact
   # Skill 维护 (3, 归类修正)
   skill-comply                skill-scout                  skill-stocktake
 )
@@ -108,8 +98,7 @@ COMMANDS=(
   hookify-list      learn              learn-eval
   loop-start        loop-status        model-route
   plan              plan-prd           python-review
-  refactor-clean    rust-build         rust-review
-  rust-test         security-scan      skill-create
+  refactor-clean    security-scan      skill-create
   test-coverage     update-codemaps    update-docs
 )
 
@@ -118,6 +107,7 @@ COUNT_COPIED=0
 COUNT_SKIPPED=0
 COUNT_MISSING=0
 COUNT_PLANNED=0
+COUNT_ARCHIVED=0
 
 # ===== Functions =====
 # Agents get no Source comment at all: the agent loader requires frontmatter
@@ -164,6 +154,21 @@ copy_one() {
     src="$ECC_ROOT/$type/$name.md"
     dst="$REPO_ROOT/$type/$name.md"
     rel="$type/$name.md"
+  fi
+
+  # attic/ is the record of what v1 deliberately dropped. Vendoring a name that lives
+  # there would silently undo that curation and drag its dangling references back in,
+  # so refuse rather than copy — even under --force.
+  local archived
+  if [[ "$type" == "skills" ]]; then
+    archived="$REPO_ROOT/attic/skills/$name"
+  else
+    archived="$REPO_ROOT/attic/$type/$name.md"
+  fi
+  if [[ -e "$archived" ]]; then
+    printf '  ⊘ ARCHIVED %s  (lives in attic/ — refusing; drop it from the manifest)\n' "$rel"
+    COUNT_ARCHIVED=$((COUNT_ARCHIVED + 1))
+    return
   fi
 
   if [[ ! -e "$src" ]]; then
@@ -232,17 +237,27 @@ echo
 # ===== Summary =====
 total=$((${#AGENTS[@]} + ${#SKILLS[@]} + ${#COMMANDS[@]}))
 echo "==> Summary"
-echo "    Total in manifest:  $total"
+echo "    Total in manifest:  $total  (${#AGENTS[@]} agents + ${#SKILLS[@]} skills + ${#COMMANDS[@]} commands)"
 if [[ "$MODE" == "dry-run" ]]; then
   echo "    Would copy:         $COUNT_PLANNED"
 fi
 echo "    Copied:             $COUNT_COPIED"
 echo "    Skipped (exists):   $COUNT_SKIPPED"
 echo "    Missing (no src):   $COUNT_MISSING"
+echo "    Archived (refused): $COUNT_ARCHIVED"
 
 if [[ "$MODE" == "dry-run" ]]; then
   echo
   echo "    (dry-run — no changes made; rerun with --apply to copy)"
+fi
+
+# A manifest entry that lives in attic/ is a curation regression, not a transient miss:
+# fail loudly so it gets pruned instead of quietly resurrecting on the next --apply.
+if [[ "$COUNT_ARCHIVED" -gt 0 ]]; then
+  echo
+  echo "ERROR: $COUNT_ARCHIVED manifest entries are archived in attic/. Remove them from the" >&2
+  echo "       AGENTS/SKILLS/COMMANDS arrays above — vendoring them would undo the v1 curation." >&2
+  exit 3
 fi
 
 if [[ "$COUNT_MISSING" -gt 0 ]]; then
