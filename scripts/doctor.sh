@@ -238,13 +238,16 @@ else
   fi
 fi
 
-# Live-but-wrong registration: a wrapper dir exists but no matching command file backs it —
-# generate-codex-command-skills.sh's rebuild just hasn't been rerun since a command was removed.
+# Live-but-wrong registration: a wrapper dir exists but nothing backs it — either a command file
+# (commands/<name>.md, commands/local/<name>.md) or, for gray-rollout-migrated names, the skill it
+# now reads from (skills/<name>/SKILL.md — see MIGRATED_COMMAND_SKILLS in
+# generate-codex-command-skills.sh). generate-codex-command-skills.sh's rebuild just hasn't been
+# rerun since the backing source was removed.
 for d in .agents/skills/evc-command-*/; do
   [[ -d "$d" ]] || continue
   cname="$(basename "$d" | sed 's/^evc-command-//')"
-  if [[ ! -f "commands/$cname.md" && ! -f "commands/local/$cname.md" ]]; then
-    echo "  ✗ .agents/skills/evc-command-$cname has no matching commands/$cname.md — rerun scripts/generate-codex-command-skills.sh"
+  if [[ ! -f "commands/$cname.md" && ! -f "commands/local/$cname.md" && ! -f "skills/$cname/SKILL.md" ]]; then
+    echo "  ✗ .agents/skills/evc-command-$cname has no matching commands/$cname.md or skills/$cname/SKILL.md — rerun scripts/generate-codex-command-skills.sh"
     sec4_fail=1
   fi
 done

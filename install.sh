@@ -129,8 +129,11 @@ echo "    FORCE:        $FORCE"
 echo "    BACKUP:       $BACKUP"
 echo
 
-# Sanity: repo must have what install expects
-for d in agents skills commands hooks; do
+# Sanity: repo must have what install expects. commands/ is optional — the
+# 2026-07-14 gray-rollout Phase 2 migration moved all command content into
+# skills/, so a repo with no legacy commands left can omit the directory
+# entirely; the commands/ loops below already no-op gracefully when it's absent.
+for d in agents skills hooks; do
   if [[ ! -d "$REPO_ROOT/$d" ]]; then
     echo "ERROR: missing $REPO_ROOT/$d" >&2
     exit 1

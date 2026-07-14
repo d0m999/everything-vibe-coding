@@ -40,9 +40,8 @@ ecc 太全 — 500+ skills、几十个 agent、覆盖几十种技术栈。对我
 .
 ├── README.md
 ├── install.sh                # 逐项 symlink 到 ~/.claude/
-├── skills/                   # 启用的 skills（含本地原创；一层目录参与 install）
+├── skills/                   # 启用的 skills（含本地原创、含 gray-rollout 迁入的 command 系；一层目录参与 install）
 ├── agents/                   # 启用的 agents
-├── commands/                 # 启用的 commands
 ├── hooks/                    # 启用的 hooks
 ├── attic/                    # 下架但留底（不参与 install）
 └── docs/
@@ -60,19 +59,19 @@ ecc 太全 — 500+ skills、几十个 agent、覆盖几十种技术栈。对我
 ./install.sh --backup     # 安装前把 ~/.claude/ 备份到 ~/.claude.bak-<ts>/
 ```
 
-Codex 安装 skills，并把 commands 生成成 Codex skill wrappers：
+Codex 安装 skills，并为其中原本是 command 的一批额外生成 Codex skill wrappers：
 
 ```bash
 ./install-codex.sh          # dry-run，预览写入 ~/.codex/skills/ 的内容
 ./install-codex.sh --apply  # 逐项 symlink skills，并生成/链接 command wrappers
 ```
 
-Codex 的 `$` skill picker 会显示 command 名，例如 `commands/code-review.md` 对应 `$code-review`，`commands/local/ralph-init.md` 对应 `$ralph-init`。`~/.codex/prompts` 也会保留一份兼容链接，但它不是主要入口。
+Codex 的 `$` skill picker 会显示 command 名，例如 `skills/code-review/SKILL.md` 对应 `$code-review`，`skills/ralph-init/SKILL.md` 对应 `$ralph-init`（这批名字见 `scripts/generate-codex-command-skills.sh` 里的 `MIGRATED_COMMAND_SKILLS` 清单——2026-07-14 gray-rollout Phase 2 之前它们读的是 commands/，之后 commands 目录已删除，改读同名 skill）。`~/.codex/prompts` 也会保留一份兼容链接，但它不是主要入口。
 
 设计要点：
 
 - **逐项 symlink**（不是整个目录 symlink）。这样 `~/.claude/skills/` 下既可以放本 repo 管理的 skill，也容得下临时、未纳入 repo 的内容。
-- **Codex 也逐项 symlink** 到 `$CODEX_HOME/skills`（默认 `~/.codex/skills`），并为 `commands/*.md` 生成 `.agents/skills/evc-command-*` wrapper 后链接进去，避免覆盖 Codex 自带的 `.system` skills 和其他本地安装项。
+- **Codex 也逐项 symlink** 到 `$CODEX_HOME/skills`（默认 `~/.codex/skills`），并为 `MIGRATED_COMMAND_SKILLS` 清单里的 command 系 skill 生成 `.agents/skills/evc-command-*` wrapper 后链接进去，避免覆盖 Codex 自带的 `.system` skills 和其他本地安装项。
 - **同名冲突给提示、不静默覆盖**。已存在的目标会列出来，需要 `--force` 才覆盖。
 - **`attic/` 不参与 install**。
 
@@ -125,7 +124,7 @@ v1 白名单不是一次性凭印象列出来，而是分阶段问答生成：
 
 ### 我自己写的（原创）
 
-放进参与安装的对应目录。Claude/Codex skills 放 `skills/<name>/`（一层目录，确保 `install.sh` / `install-codex.sh` 能发现）；commands 这类需要与 upstream 区分的内容可放 `commands/local/`。原创内容不需要 SOURCES 记录，但要在 `docs/SELECTION-v1.md` / `docs/VENDORING-MANIFEST.md` 记录为本地原创；如果存在 `CHANGELOG.md`，也在顶部加一行。
+放进参与安装的对应目录。Claude/Codex skills 一律放 `skills/<name>/`（一层目录，确保 `install.sh` / `install-codex.sh` 能发现）；如果这项内容原本是 command 形态、还需要 Codex 端显式的 `/name` 触发包装，把名字加进 `scripts/generate-codex-command-skills.sh` 的 `MIGRATED_COMMAND_SKILLS` 清单。原创内容不需要 SOURCES 记录，但要在 `docs/SELECTION-v1.md` / `docs/VENDORING-MANIFEST.md` 记录为本地原创；如果存在 `CHANGELOG.md`，也在顶部加一行。
 
 ### 本地补丁（对 vendored 内容的修改）
 
@@ -162,12 +161,14 @@ YYYY-MM-DD  add|drop|patch|sync  <path>  <一句话说明>
 
 ## 当前状态
 
-- [x] v1 问卷完成 → `docs/SELECTION-v1.md`（v1 keep **135 项** / drop ~360+ 项，agents 31 / skills 73 / commands 31 = 29 from ecc + 1 fork + 1 原创）
-- [x] post-v1 本地原创 skill `video-extract` 纳入 `skills/video-extract/`（当前 skills 74；用于视频内容抽取、字幕/转写、YouTube 403/SABR/PO-token 浏览器兜底）
+- [x] v1 问卷完成 → `docs/SELECTION-v1.md`（v1 keep **135 项** / drop ~360+ 项，agents 31 / skills 73 / commands 31 = 29 from ecc + 1 fork + 1 原创——历史快照，已被下面两行取代）
+- [x] post-v1 本地原创 skill `video-extract` 纳入 `skills/video-extract/`（用于视频内容抽取、字幕/转写、YouTube 403/SABR/PO-token 浏览器兜底）
+- [x] gray-rollout commands→skills 迁移完成：Phase 1（2026-07-14，24 legacy commands + ralph-init bundle 复制进 skills/，见 `docs/LOCAL-PATCHES.md`）→ Phase 2（同日，删掉 commands 顶层 24 个 .md + commands/local/ralph-init 冗余壳；commands 目录不再存在；`scripts/generate-codex-command-skills.sh` 改为对 `MIGRATED_COMMAND_SKILLS` 清单里的 25 个名字从 skills/ 读取）
+- [x] 当前实际计数（2026-07-14，Phase 2 完成后）：agents **29** / skills **78** / commands **0** — 早前「v1 keep 135 项」的三项计数已经过期，历史数字保留在 `docs/SELECTION-v1.md`，不再更新
 - [x] vendoring manifest review 完成 → `docs/VENDORING-MANIFEST.md`（2026-05-16 用户确认 6/6 项）
 - [x] `scripts/vendor-from-ecc.sh` 完成
 - [x] `scripts/check-references.sh` 完成（识别 74 个 drop name 提及，按 count≥2+1:1替代品 筛选 fix 了 6 处 `architect`/`e2e-runner`，其余在 `docs/LOCAL-PATCHES.md` 留底）
-- [x] `commands/plan-orchestrate.md` fork 完成（按附 A-H 改动清单）
+- [x] `skills/plan-orchestrate/SKILL.md` fork 完成（按附 A-H 改动清单；2026-05-16 首次落地为 commands/plan-orchestrate.md，2026-07-14 gray-rollout Phase 2 迁移至此，commands/ 原件已删）
 - [x] `install.sh` 完成
 - [x] 上游基线 ecc commit：`f04702b` (`2.0.0-rc.1`，2026-05-16 抓取)
 - [x] 首次 install 完成 + 共存验证（与 ecc plugin 共存，bare 名字 + ecc:&lt;name&gt; 双 namespace 并存）
@@ -176,7 +177,7 @@ YYYY-MM-DD  add|drop|patch|sync  <path>  <一句话说明>
 ## 附 A-H：plan-orchestrate fork 改动清单
 
 > 来源：`~/.claude/commands/plan-orchestrate.md`（user-level，328 行）
-> 目标：`commands/plan-orchestrate.md`
+> 目标：`skills/plan-orchestrate/SKILL.md`（2026-05-16 首次落地为 commands/plan-orchestrate.md，2026-07-14 Phase 2 gray-rollout 清理后迁移至此，原 commands/ 副本已删除）
 
 - **A**. 删 Phase 0 step 2 整段（ECC_MODE 检测）— bare 架构永远输出 bare 名字无前缀。
 - **B**. Phase 0 step 4 扩展为 `py_sub ∈ {mle, django, fastapi, generic}`，决定 reviewer + build resolver：

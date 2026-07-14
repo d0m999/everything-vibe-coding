@@ -276,6 +276,28 @@
 - **不熟悉列表**：知道存在但不会用的项 → 看是否值得学（保留学习意图的进 `attic/`，没意图的 drop）
 - **空白发现**：4 周里有没有「想做这个事但 v1 里没合适工具」的瞬间 → 登记到 `docs/SOURCES.md` 作为外部引入候选
 
+## Post-v1 变更纠偏（持续更新）
+
+> 本节 v1 之后新增，用于给上面冻结的「Keep 名单」历史快照做纠偏。历史数字不改，只在这里追加"发生了什么、现在实际是多少"。
+
+### 已发生的变更
+
+1. **2026-07-14 Post-v1 移除 7 项**（v1 keep 135 → 128）：`ecc-guide`/`cost-report`/`harness-audit`/`skill-health`/`prune`（commands）、`gateguard`/`continuous-learning-v2`（skills）。原因见 `docs/VENDORING-MANIFEST.md`「Post-v1 移除」一节，不在此重复。
+2. **2026-07-14 补 Swift 六件套**（`docs/ECC-DRIFT-AUDIT.md` P5a）：`swiftui-patterns`、`swift-concurrency-6-2`、`swift-protocol-di-testing`、`swift-actor-persistence`、`foundation-models-on-device`、`liquid-glass-design` 六个 skill 从 ecc vendor 进来，填补当时「零 Swift skill」的能力缺口。
+3. **2026-07-14 gray-rollout commands→skills 迁移**（`docs/LOCAL-PATCHES.md`）：
+   - Phase 1：24 个顶层 command + `ralph-init` bundle 复制进 `skills/<name>/SKILL.md`（`security-scan` 是与既有 skill 合并，其余 24 个是新增 skill 目录）。
+   - Phase 2：确认 skill 侧完整覆盖后，删掉 `commands/` 顶层 24 个 `.md` + `commands/local/ralph-init`（.md + bundle），`commands/` 目录不再存在。`scripts/generate-codex-command-skills.sh` 相应改为对这批名字从 `skills/<name>/SKILL.md` 读取（清单见脚本内 `MIGRATED_COMMAND_SKILLS`），保留 Codex `$name` 触发包装。
+
+### 当前实际计数（2026-07-14 Phase 2 完成后）
+
+| 维度 | v1 keep（2026-05-16，冻结快照，见上方「Keep 名单」） | 当前实际 |
+|---|---|---|
+| agents | 31 | **29** |
+| skills | 73（+ post-v1 `video-extract` = 74） | **78** |
+| commands | 31 | **0**（目录已不存在，全部并入 skills/） |
+
+上面「Keep 名单」「Drop」两节的具体条目仍按 2026-05-16 快照原样保留，不做逐条更新——它们是决策记录，不是当前状态清单。要查当前真实内容，直接 `ls skills/ agents/` 或跑 `./scripts/doctor.sh`。
+
 ## 下一步
 
 1. ~~**写 `scripts/vendor-from-ecc.sh`**~~（manifest review 完成后做）

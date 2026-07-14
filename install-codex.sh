@@ -117,7 +117,8 @@ echo "    FORCE:            $FORCE"
 echo "    BACKUP:           $BACKUP"
 echo
 
-for d in skills commands; do
+# commands/ is optional — see install.sh for why (Phase 2 gray-rollout migration).
+for d in skills; do
   if [[ ! -d "$REPO_ROOT/$d" ]]; then
     echo "ERROR: missing $REPO_ROOT/$d" >&2
     exit 1

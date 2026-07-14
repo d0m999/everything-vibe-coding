@@ -3,11 +3,39 @@
 #
 # Codex does not expose these as bare slash commands. A thin skill wrapper makes
 # each command discoverable from the Codex skill picker by its command name.
+#
+# Sources, in order of precedence per name:
+#   1. skills/<name>/SKILL.md, for names listed in MIGRATED_COMMAND_SKILLS below.
+#      These were gray-rollout-migrated from commands/<name>.md to skills/ on
+#      2026-07-14 (Phase 1) and commands/<name>.md was deleted in Phase 2 — the
+#      content moved, but Codex still needs an explicit "/name" trigger wrapper
+#      since it has no native slash-command concept, so this script keeps
+#      generating one, just reading from the new location.
+#   2. commands/<name>.md and commands/local/<name>.md — any command not (yet)
+#      migrated to skills/.
 
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT_DIR="$REPO_ROOT/.agents/skills"
+
+# Names whose Claude Code command content now lives at skills/<name>/SKILL.md
+# instead of commands/<name>.md (2026-07-14 gray-rollout Phase 2 deletion).
+MIGRATED_COMMAND_SKILLS=(
+  build-fix code-review fastapi-review hookify hookify-configure hookify-help
+  hookify-list learn-eval loop-start loop-status mempaw-loop-plan
+  mempaw-loop-start mempaw-loop-status model-route plan plan-orchestrate
+  plan-prd python-review ralph-init refactor-clean security-scan skill-create
+  test-coverage update-codemaps update-docs
+)
+
+is_migrated() {
+  local name="$1" m
+  for m in "${MIGRATED_COMMAND_SKILLS[@]}"; do
+    [[ "$m" == "$name" ]] && return 0
+  done
+  return 1
+}
 
 yaml_value() {
   local key="$1"
@@ -25,18 +53,17 @@ yaml_value() {
 }
 
 emit_wrapper() {
-  local command_file="$1"
-  local name
+  local content_file="$1"
+  local name="$2"
   local rel_command
   local desc
   local args
   local wrapper_dir
   local wrapper_file
 
-  name="$(basename "$command_file" .md)"
-  rel_command="${command_file#$REPO_ROOT/}"
-  desc="$(yaml_value description "$command_file")"
-  args="$(yaml_value argument-hint "$command_file")"
+  rel_command="${content_file#$REPO_ROOT/}"
+  desc="$(yaml_value description "$content_file")"
+  args="$(yaml_value argument-hint "$content_file")"
   wrapper_dir="$OUT_DIR/evc-command-$name"
   wrapper_file="$wrapper_dir/SKILL.md"
 
@@ -79,12 +106,25 @@ rm -rf "$OUT_DIR"/evc-command-*/
 
 for f in "$REPO_ROOT/commands"/*.md; do
   [[ -e "$f" ]] || continue
-  emit_wrapper "$f"
+  name="$(basename "$f" .md)"
+  is_migrated "$name" && continue
+  emit_wrapper "$f" "$name"
 done
 
 if [[ -d "$REPO_ROOT/commands/local" ]]; then
   for f in "$REPO_ROOT/commands/local"/*.md; do
     [[ -e "$f" ]] || continue
-    emit_wrapper "$f"
+    name="$(basename "$f" .md)"
+    is_migrated "$name" && continue
+    emit_wrapper "$f" "$name"
   done
 fi
+
+for name in "${MIGRATED_COMMAND_SKILLS[@]}"; do
+  skill_file="$REPO_ROOT/skills/$name/SKILL.md"
+  if [[ -e "$skill_file" ]]; then
+    emit_wrapper "$skill_file" "$name"
+  else
+    echo "warning: '$name' listed in MIGRATED_COMMAND_SKILLS but $skill_file is missing" >&2
+  fi
+done

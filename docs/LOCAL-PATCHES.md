@@ -6,6 +6,21 @@
 >
 > 用途：将来从上游同步新版本时识别需要 re-apply 的修改点。
 
+## 2026-07-15 — commands/ → skills/ 迁移（Phase 2，删除冗余壳）
+
+Phase 1（见下一节）之后的收尾：核实 25 组 `commands/<name>.md` ↔ `skills/<name>/SKILL.md` 全部内容对齐（`security-scan` 已在 Phase 1 合并；`refactor-clean`/`skill-create` 经 `git show <commit>^:...` 核实为 Phase 1 新增而非既存），删掉 `commands/` 顶层 24 个 `.md` + `commands/local/ralph-init`（.md + 25 文件的 bundle 目录），`commands/` 目录随之消失（git 自动清理空目录）。
+
+| 日期 | 文件 | 修改 | 原因 |
+|---|---|---|---|
+| 2026-07-15 | `commands/*.md`（24 个）、`commands/local/ralph-init.md`、`commands/local/ralph-init/`（bundle，25 文件） | 全部 `git rm` | 内容已在 Phase 1 完整镜像进 `skills/`，继续保留纯属灰度期的临时冗余；`security-scan` 的 agent 委派行为已在 Phase 1 用正文显式指令并入 skill 版本（见下一节），不再需要旧 command 版本兜底 |
+| 2026-07-15 | `scripts/generate-codex-command-skills.sh` | 新增 `MIGRATED_COMMAND_SKILLS` 数组（这 25 个名字），这批名字的 wrapper 生成源从 `commands/<name>.md` 切到 `skills/<name>/SKILL.md`；未列入数组的名字仍走原 `commands/`/`commands/local/` 逻辑 | Codex 没有原生斜杠命令概念，`evc-command-<name>` wrapper 里「Use when user types /name」这句提示是 Codex 端唯一可靠触发这批名字的方式（Phase 1 的 Codex review 已证实：光靠 `skills/<name>/` 原生安装不够，见下一节）。源文件删了但 wrapper 逻辑必须继续生成，只能换源 |
+| 2026-07-15 | `install.sh`、`install-codex.sh` | 顶部 sanity check 的必需目录列表去掉 `commands`（分别改成 `agents skills hooks` 和 `skills`） | 两份脚本原本硬性要求 `commands/` 目录存在，否则直接 `exit 1`；`commands/` 现在可以合法为空/不存在，各自的 `commands/*.md` 循环本来就用 `[[ -e "$f" ]] \|\| continue` 优雅跳过，不需要目录一定存在 |
+| 2026-07-15 | `scripts/doctor.sh` | 「Install-face drift」一节「wrapper 是否有回源文件」的检查条件加上 `skills/$cname/SKILL.md` 存在也算数（原来只认 `commands/$cname.md` 和 `commands/local/$cname.md`） | 否则这 25 个 wrapper 会被判定成孤儿，`doctor.sh` 永远报红，跟 `generate-codex-command-skills.sh` 的新逻辑对不上 |
+| 2026-07-15 | `README.md` | 目录树删掉 `commands/` 一行；安装说明段落改成"从 `skills/<name>/SKILL.md` 读取 wrapper 源"；「原创内容放哪」的指引删掉 `commands/local/` 选项；「当前状态」补两行记录 Phase 2 完成 + 当前实际计数（agents 29 / skills 78 / commands 0）；`plan-orchestrate` fork 的历史记录路径改指向 `skills/plan-orchestrate/SKILL.md` | `commands/` 已经不存在，`doctor.sh` 的「README path consistency」检查会对着已删除路径报错；顺带把 v1 时期就已经过期的三项计数标注为历史快照 |
+| 2026-07-15 | `docs/SELECTION-v1.md` | 补一节「Post-v1 变更纠偏」，记录 post-v1 移除 7 项、Swift 六件套、本次 Phase 2 迁移，并给出当前实际计数；原「Keep 名单」「Drop」两节不改 | v1 keep total「135 项」已经和实际（agents 29 / skills 78 / commands 0）明显对不上，且原文没有纠偏说明，容易被当成当前状态误用 |
+
+跑过 `install.sh --apply --prune`（剪掉 26 条悬空 symlink）→ `generate-codex-command-skills.sh` → `install-codex.sh --apply --prune`（剪掉 26 条悬空 symlink）→ `doctor.sh`，全部 CLEAN。
+
 ## 2026-07-14 — commands/ → skills/ 迁移（Phase 1，灰度）
 
 把 legacy `commands/*.md` 平迁成 `skills/<name>/SKILL.md`（斜杠名不变），走灰度：Phase 1 只新增 skills/，`commands/` 原文件保留在原地当回滚，暂不改 `install.sh`/`install-codex.sh`/`generate-codex-command-skills.sh`（那是 Phase 2）。24 个无冲突文件是纯机械迁移（只加 `name:` frontmatter 字段，正文逐字节不变，用 `diff` 核对过），未逐行记录；以下三处是有实质内容改动或被放弃的：
