@@ -350,20 +350,23 @@ claude plugin validate plugins/core/.claude-plugin/plugin.json
 
 ---
 
-## 5. 归属分配（57 skills / 31 commands / 29 agents）
+## 5. 归属分配（55 skills / 26 commands / 29 agents）
 
-> skills 从 50 涨到 57，因为 §3.1 从 ECC 捞了 7 个 Swift/iOS 的。
+> skills 从 48 涨到 55，因为 §3.1 从 ECC 捞了 7 个 Swift/iOS 的。
+> （48 = 当前仓库有效 skill 数，已排除 `gateguard`——已被 1d45347 删除——和
+> `continuous-learning-v2`——SKILL.md 已被 65225ab 删除，仅剩一个空壳 `scripts/`
+> 目录，不是可用 skill。）
 
-### `core` — 14 skills / 13 commands / 17 agents（全局常开）
+### `core` — 13 skills / 11 commands / 17 agents（全局常开）
 
 **skills**
 `architecture-decision-records` `codebase-onboarding` `coding-standards` `documentation-lookup`
-`error-handling` `gateguard` `plankton-code-quality` `prompt-optimizer` `repo-scan`
+`error-handling` `plankton-code-quality` `prompt-optimizer` `repo-scan`
 `safety-guard` `security-review` `security-scan` `strategic-compact` `verification-loop`
 
 **commands**
 `plan` `plan-prd` `code-review` `build-fix` `refactor-clean` `security-scan` `test-coverage`
-`update-docs` `update-codemaps` `learn` `prune` `model-route` `cost-report`
+`update-docs` `update-codemaps` `learn` `model-route`
 
 **agents**
 `planner` `architect` `code-architect` `code-explorer` `code-reviewer` `code-simplifier`
@@ -386,16 +389,16 @@ claude plugin validate plugins/core/.claude-plugin/plugin.json
 > ML 那 4 个（`pytorch-patterns` `mle-workflow` `pytorch-build-resolver` `mle-reviewer`）暂归 backend。
 > ML 做得多的话值得单开第 7 个包 `ml`。
 
-### `agentic` — 13 skills / 9 commands / 1 agent
+### `agentic` — 12 skills / 7 commands / 1 agent
 
 做 agent / LLM 应用时开。**日常开发用的那部分**（harness 设计、eval、skill 治理、hookify）。
 
 **skills** `agent-architecture-audit` `agent-eval` `agent-harness-construction`
 `agent-introspection-debugging` `agentic-engineering` `agentic-os` `ai-regression-testing`
-`continuous-learning-v2` `eval-harness` `hookify-rules` `skill-comply` `skill-scout` `skill-stocktake`
+`eval-harness` `hookify-rules` `skill-comply` `skill-scout` `skill-stocktake`
 
-**commands** `harness-audit` `hookify` `hookify-configure` `hookify-help` `hookify-list`
-`learn-eval` `plan-orchestrate` `skill-create` `skill-health`
+**commands** `hookify` `hookify-configure` `hookify-help` `hookify-list`
+`learn-eval` `plan-orchestrate` `skill-create`
 
 **agents** `harness-optimizer`
 
@@ -441,7 +444,7 @@ claude plugin validate plugins/core/.claude-plugin/plugin.json
 
 | 文件 | 处理 |
 |---|---|
-| `commands/ecc-guide.md` | **删**——ECC 都卸载了，这个向导没意义 |
+| `commands/ecc-guide.md` | ✅ 已删（44fdfdc）——ECC 都卸载了，这个向导没意义 |
 
 ---
 
