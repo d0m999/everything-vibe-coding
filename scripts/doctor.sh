@@ -201,27 +201,41 @@ echo "==> [4/6] Install-face drift"
 sec4_fail=0
 
 claude_dry="$("$REPO_ROOT/install.sh" --dry-run --prune 2>&1)"
-n="$(grep -c '→ LINK' <<< "$claude_dry" || true)"
-if [[ "$n" -gt 0 ]]; then
-  echo "  ✗ ~/.claude: $n item(s) in repo but not installed — run ./install.sh --apply"
+claude_dry_status=$?
+if [[ "$claude_dry_status" -ne 0 ]]; then
+  echo "  ✗ install.sh --dry-run --prune exited $claude_dry_status (precondition failure, not drift) — output:"
+  echo "$claude_dry" | sed 's/^/      /'
   sec4_fail=1
-fi
-n="$(grep -c 'PRUNE (would remove)' <<< "$claude_dry" || true)"
-if [[ "$n" -gt 0 ]]; then
-  echo "  ✗ ~/.claude: $n dangling symlink(s) into this repo — run ./install.sh --apply --prune"
-  sec4_fail=1
+else
+  n="$(grep -c '→ LINK' <<< "$claude_dry" || true)"
+  if [[ "$n" -gt 0 ]]; then
+    echo "  ✗ ~/.claude: $n item(s) in repo but not installed — run ./install.sh --apply"
+    sec4_fail=1
+  fi
+  n="$(grep -c 'PRUNE (would remove)' <<< "$claude_dry" || true)"
+  if [[ "$n" -gt 0 ]]; then
+    echo "  ✗ ~/.claude: $n dangling symlink(s) into this repo — run ./install.sh --apply --prune"
+    sec4_fail=1
+  fi
 fi
 
 codex_dry="$("$REPO_ROOT/install-codex.sh" --dry-run --prune 2>&1)"
-n="$(grep -cE '^  LINK ' <<< "$codex_dry" || true)"
-if [[ "$n" -gt 0 ]]; then
-  echo "  ✗ ~/.codex: $n item(s) in repo but not installed — run ./install-codex.sh --apply"
+codex_dry_status=$?
+if [[ "$codex_dry_status" -ne 0 ]]; then
+  echo "  ✗ install-codex.sh --dry-run --prune exited $codex_dry_status (precondition failure, not drift) — output:"
+  echo "$codex_dry" | sed 's/^/      /'
   sec4_fail=1
-fi
-n="$(grep -c 'PRUNE (would remove)' <<< "$codex_dry" || true)"
-if [[ "$n" -gt 0 ]]; then
-  echo "  ✗ ~/.codex: $n dangling symlink(s) into this repo — run ./install-codex.sh --apply --prune"
-  sec4_fail=1
+else
+  n="$(grep -cE '^  LINK ' <<< "$codex_dry" || true)"
+  if [[ "$n" -gt 0 ]]; then
+    echo "  ✗ ~/.codex: $n item(s) in repo but not installed — run ./install-codex.sh --apply"
+    sec4_fail=1
+  fi
+  n="$(grep -c 'PRUNE (would remove)' <<< "$codex_dry" || true)"
+  if [[ "$n" -gt 0 ]]; then
+    echo "  ✗ ~/.codex: $n dangling symlink(s) into this repo — run ./install-codex.sh --apply --prune"
+    sec4_fail=1
+  fi
 fi
 
 # Live-but-wrong registration: a wrapper dir exists but no matching command file backs it —
@@ -231,6 +245,17 @@ for d in .agents/skills/evc-command-*/; do
   cname="$(basename "$d" | sed 's/^evc-command-//')"
   if [[ ! -f "commands/$cname.md" && ! -f "commands/local/$cname.md" ]]; then
     echo "  ✗ .agents/skills/evc-command-$cname has no matching commands/$cname.md — rerun scripts/generate-codex-command-skills.sh"
+    sec4_fail=1
+  fi
+done
+
+# Reverse case: a command file exists but has no matching Codex wrapper — a command was added
+# (or moved into commands/local/) but generate-codex-command-skills.sh was never rerun.
+for f in commands/*.md commands/local/*.md; do
+  [[ -e "$f" ]] || continue
+  cname="$(basename "$f" .md)"
+  if [[ ! -d ".agents/skills/evc-command-$cname" ]]; then
+    echo "  ✗ $f has no matching .agents/skills/evc-command-$cname — rerun scripts/generate-codex-command-skills.sh"
     sec4_fail=1
   fi
 done
