@@ -27,9 +27,9 @@ Start
 
 Recommended production stack:
 1. RFC decomposition (`ralphinho-rfc-pipeline`)
-2. quality gates (`plankton-code-quality` + `/quality-gate`)
+2. quality gates (`plankton-code-quality` skill + the `quality-gate` hook, which runs automatically on Write/Edit)
 3. eval loop (`eval-harness`)
-4. session persistence (`nanoclaw-repl`)
+4. session continuity (Claude Code's built-in context compaction + `strategic-compact` for manual checkpoints)
 
 ## Failure Modes
 

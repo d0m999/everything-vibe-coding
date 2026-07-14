@@ -139,8 +139,8 @@ Good pattern:
 ## Integration with ECC
 
 - Use `verification-loop` after recovery if code was changed.
-- Use `council` when the issue is not technical failure but decision ambiguity.
-- Use `workspace-surface-audit` if the failure came from conflicting local state or repo drift.
+- When the issue is not technical failure but decision ambiguity, escalate to the user directly rather than guessing.
+- If the failure came from conflicting local state or repo drift, audit the working tree directly with `git status` / `git diff`.
 
 ## Output Standard
 

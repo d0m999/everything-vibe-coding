@@ -109,7 +109,7 @@ Common causes: race conditions (use auto-wait locators), network timing (wait fo
 
 ## Reference
 
-For detailed Playwright patterns, Page Object Model examples, configuration templates, CI/CD workflows, and artifact management strategies, see skill: `e2e-testing`.
+Detailed Playwright patterns, Page Object Model examples, configuration templates, CI/CD workflows, and artifact management strategies are covered directly in this agent's guidance above; for browser-driven QA and dogfooding, see gstack `/qa` / `/browse`.
 
 ---
 

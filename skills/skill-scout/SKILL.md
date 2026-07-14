@@ -112,18 +112,18 @@ finds no close match.
 ```markdown
 | # | Skill | Source | Why it matches | Gap |
 | --- | --- | --- | --- | --- |
-| 1 | article-writing | Local ECC | Drafts articles and guides | Not focused on release notes |
-| 2 | content-engine | Local ECC | Multi-format content workflow | Heavier than needed |
-| 3 | blog-writer | GitHub | Blog writing skill with recent commits | Needs security review |
+| 1 | documentation-lookup | Local | Verifies current library/API behavior before writing | Not focused on release notes |
+| 2 | repo-scan | Local | Surveys existing docs and patterns across the repo | Broader than release notes alone |
+| 3 | changelog-writer | GitHub | Changelog/release-note skill with recent commits | Needs security review |
 ```
 
 ### User-Facing Summary
 
 ```markdown
 I found two close local matches and one external candidate. The closest fit is
-`article-writing`; it covers drafting and revision, but it does not include the
-release-note checklist you asked for. I can either use it as-is, fork it into a
-release-note variant, or create a fresh skill.
+`documentation-lookup`; it covers verifying current behavior, but it does not
+include the release-note checklist you asked for. I can either use it as-is,
+fork it into a release-note variant, or create a fresh skill.
 ```
 
 ## Anti-Patterns
@@ -136,6 +136,5 @@ release-note variant, or create a fresh skill.
 
 ## Related
 
-- `search-first` - General search-before-building workflow.
+- `documentation-lookup` - General search-before-building workflow.
 - `skill-stocktake` - Audit installed skills for health, duplicates, and gaps.
-- `agent-sort` - Categorize and organize existing agents and skills.

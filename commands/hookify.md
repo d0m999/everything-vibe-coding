@@ -16,7 +16,7 @@ If no arguments are provided, analyze the current conversation to find behaviors
 ### Step 1: Gather Behavior Info
 
 - With arguments: parse the user's description of the unwanted behavior
-- Without arguments: use the `conversation-analyzer` agent to find:
+- Without arguments: read back through the current conversation directly and look for:
   - explicit corrections
   - frustrated reactions to repeated mistakes
   - reverted changes
