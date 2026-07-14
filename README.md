@@ -12,6 +12,8 @@
 - [haibindev/repo-scan](https://github.com/haibindev/repo-scan)（MIT）— `skills/repo-scan/`，经 ecc 转 vendor
 - [joaquinhuigomez/agent-eval](https://github.com/joaquinhuigomez/agent-eval)（MIT）— `skills/agent-eval/`，经 ecc 转 vendor
 
+各上游项目的原始版权声明见 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)。
+
 ## 为什么有这个 repo
 
 ecc 太全 — 500+ skills、几十个 agent、覆盖几十种技术栈。对我而言：
