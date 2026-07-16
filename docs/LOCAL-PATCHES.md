@@ -6,6 +6,26 @@
 >
 > 用途：将来从上游同步新版本时识别需要 re-apply 的修改点。
 
+## 2026-07-16 — 三来源 skill 冗余收敛（attic 15 个 + 引用清理）
+
+与 gstack 套件、Matt Pocock skills（`~/.agents/skills/`）、Claude Code 内建 skill 逐组对比后，用户逐项决策将 15 个冗余 skill 归档到 `attic/skills/`：`code-review`、`security-review`（均与内建同名冲突且功能被内建覆盖）、`canary-watch`（→ gstack `/canary`）、`safety-guard`（→ gstack careful/freeze/guard/unfreeze）、`learn-eval`（→ gstack `/learn`）、`plan-prd`（`/plan` 的薄包装）、`strategic-compact`（→ gstack context-save/restore + Matt handoff）、`design-system`（→ gstack `/design-consultation`）、`eval-harness`（定位与 `agent-eval`/gstack `benchmark-models` 重叠）、`verification-loop`（→ 内建 `/verify`）、`loop-start`、`loop-status`（→ mempaw-loop 三件套 + 内建 `/loop`）、`autonomous-agent-harness`、`continuous-agent-loop`、`agentic-os`（三者与 `autonomous-loops` 内容重叠，收敛为后者单一 canonical——`continuous-agent-loop` 虽是上游 v1.8 改名目标但只有 46 行存根，内容主体在 `autonomous-loops`）。
+
+保留的 skill 中指向被归档名字的引用同步清理（`/code-review`、`security-review` 的文本提及**有意保留**——现在解析到 Claude Code 内建同名 skill，是本次决策的一部分，不是悬空引用）：
+
+| 日期 | 文件 | 修改 | 原因 |
+|---|---|---|---|
+| 2026-07-16 | `skills/autonomous-loops/SKILL.md` | 头部 v1.8.0 兼容性注释改为本地说明（本仓库以 `autonomous-loops` 为 canonical，`continuous-agent-loop` 已 attic）；`verification-loop` 门禁引用改为内建 `/verify`；Credits 表删除 Verification Loop 行 | `continuous-agent-loop` 存根与 `verification-loop` 均已归档 |
+| 2026-07-16 | `skills/accessibility/SKILL.md` | Related Skills 中 `design-system` → gstack `/design-consultation` | `design-system` 已归档 |
+| 2026-07-16 | `skills/agent-architecture-audit/SKILL.md` | Related Skills 中 `autonomous-agent-harness` → `autonomous-loops` | 前者已归档 |
+| 2026-07-16 | `skills/agent-introspection-debugging/SKILL.md` | 2 处 `verification-loop` → 内建 `/verify` | 已归档 |
+| 2026-07-16 | `skills/mle-workflow/SKILL.md` | `eval-harness`（4 处）删除或并入 `ai-regression-testing`；`plan-prd`（2 处）→ `/plan`；`canary-watch`（2 处）→ gstack `/canary`；`verification-loop`（2 处）→ 内建 `/verify`；`strategic-compact` → gstack `/context-save` | 对应 skill 已归档 |
+| 2026-07-16 | `skills/plan/SKILL.md` | 删除指向 `/plan-prd` 的"Need requirements first?"提示行 | `plan-prd` 已归档 |
+| 2026-07-16 | `skills/plankton-code-quality/SKILL.md` | `verification-loop` → 内建 `/verify` | 已归档 |
+| 2026-07-16 | `skills/skill-comply/SKILL.md` | Supported Targets 示例 `verification-loop`/`strategic-compact` → `autonomous-loops`/`test-coverage`；dry-run 示例路径同步替换 | 示例指向已归档 skill |
+| 2026-07-16 | `skills/prompt-optimizer/SKILL.md` | By-Intent 表 Skills 列 `verification-loop`（4 处）→ 内建 `/verify`；Related 表 `strategic-compact` 行 → gstack `/context-save` + `/context-restore` | 对应 skill 已归档 |
+
+同场次的 `~/.claude/` 侧配套操作（非本仓库文件，记录备查）：删除 gstack 的 `investigate`（保留 Matt `diagnosing-bugs` 作为唯一根因调试入口）与 `open-gstack-browser`（`connect-chrome` 的纯别名）；移除 Matt 的 `grill-me`、`grill-with-docs` 薄包装符号链接（保留 `grilling` 本体）；`~/.claude/CLAUDE.md` gstack 列表删除 `/investigate` 行。gstack 侧删除项在 `/gstack-upgrade` 后可能回归，届时按本清单重删。
+
 ## 2026-07-15 — commands/ → skills/ 迁移（Phase 2，删除冗余壳）
 
 Phase 1（见下一节）之后的收尾：核实 25 组 `commands/<name>.md` ↔ `skills/<name>/SKILL.md` 全部内容对齐（`security-scan` 已在 Phase 1 合并；`refactor-clean`/`skill-create` 经 `git show <commit>^:...` 核实为 Phase 1 新增而非既存），删掉 `commands/` 顶层 24 个 `.md` + `commands/local/ralph-init`（.md + 25 文件的 bundle 目录），`commands/` 目录随之消失（git 自动清理空目录）。

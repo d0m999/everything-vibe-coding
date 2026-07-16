@@ -7,10 +7,10 @@ origin: ECC
 
 # Autonomous Loops Skill
 
-> Compatibility note (v1.8.0): `autonomous-loops` is retained for one release.
-> The canonical skill name is now `continuous-agent-loop`. New loop guidance
-> should be authored there, while this skill remains available to avoid
-> breaking existing workflows.
+> Local note (2026-07-16): in this repo `autonomous-loops` is the canonical
+> loop-patterns skill. Upstream's rename target `continuous-agent-loop` was a
+> 46-line stub and has been archived to `attic/skills/` — all loop guidance
+> lives here.
 
 Patterns, architectures, and reference implementations for running Claude Code autonomously in loops. Covers everything from simple `claude -p` pipelines to full RFC-driven multi-agent DAG orchestration.
 
@@ -535,7 +535,7 @@ These patterns compose well:
 
 2. **Continuous Claude + De-Sloppify** — Add `--review-prompt` with a de-sloppify directive to each iteration.
 
-3. **Any loop + Verification** — Use ECC's `/verify` command or `verification-loop` skill as a gate before commits.
+3. **Any loop + Verification** — Use the built-in `/verify` skill as a gate before commits.
 
 4. **Ralphinho's tiered approach in simpler loops** — Even in a sequential pipeline, you can route simple tasks to Haiku and complex tasks to Opus:
    ```bash
@@ -573,4 +573,3 @@ These patterns compose well:
 | Ralphinho | enitrat | credit: @enitrat |
 | Infinite Agentic Loop | disler | credit: @disler |
 | Continuous Claude | AnandChowdhary | credit: @AnandChowdhary |
-| Verification Loop | ECC | `skills/verification-loop/` in this repo |

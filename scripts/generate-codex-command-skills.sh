@@ -22,10 +22,10 @@ OUT_DIR="$REPO_ROOT/.agents/skills"
 # Names whose Claude Code command content now lives at skills/<name>/SKILL.md
 # instead of commands/<name>.md (2026-07-14 gray-rollout Phase 2 deletion).
 MIGRATED_COMMAND_SKILLS=(
-  build-fix code-review fastapi-review hookify hookify-configure hookify-help
-  hookify-list learn-eval loop-start loop-status mempaw-loop-plan
+  build-fix fastapi-review hookify hookify-configure hookify-help
+  hookify-list mempaw-loop-plan
   mempaw-loop-start mempaw-loop-status model-route plan plan-orchestrate
-  plan-prd python-review ralph-init refactor-clean security-scan skill-create
+  python-review ralph-init refactor-clean security-scan skill-create
   test-coverage update-codemaps update-docs
 )
 

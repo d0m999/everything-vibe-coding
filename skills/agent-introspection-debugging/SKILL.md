@@ -28,7 +28,7 @@ Activate this skill for:
 - producing a structured human-readable debug report
 
 Do not use this skill as the primary source for:
-- feature verification after code changes; use `verification-loop`
+- feature verification after code changes; use the built-in `/verify` skill
 - framework-specific debugging when a narrower ECC skill already exists
 - runtime promises the current harness cannot enforce automatically
 
@@ -138,7 +138,7 @@ Good pattern:
 
 ## Integration with ECC
 
-- Use `verification-loop` after recovery if code was changed.
+- Use the built-in `/verify` skill after recovery if code was changed.
 - When the issue is not technical failure but decision ambiguity, escalate to the user directly rather than guessing.
 - If the failure came from conflicting local state or repo drift, audit the working tree directly with `git status` / `git diff`.
 

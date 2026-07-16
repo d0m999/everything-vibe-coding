@@ -117,11 +117,11 @@ Map intent + scope + tech stack (from Phase 0) to specific ECC components.
 
 | Intent | Commands | Skills | Agents |
 |--------|----------|--------|--------|
-| New Feature | /plan, /code-review | verification-loop | planner, tdd-guide, code-reviewer |
-| Bug Fix | /build-fix, /code-review | verification-loop | tdd-guide, build-error-resolver |
-| Refactor | /refactor-clean, /code-review | verification-loop | refactor-cleaner, code-reviewer |
+| New Feature | /plan, /code-review | built-in /verify | planner, tdd-guide, code-reviewer |
+| Bug Fix | /build-fix, /code-review | built-in /verify | tdd-guide, build-error-resolver |
+| Refactor | /refactor-clean, /code-review | built-in /verify | refactor-cleaner, code-reviewer |
 | Research | /plan | documentation-lookup, repo-scan, codebase-onboarding | code-explorer |
-| Testing | /test-coverage, /code-review | verification-loop | tdd-guide, e2e-runner (or gstack `/qa` for browser flows) |
+| Testing | /test-coverage, /code-review | built-in /verify | tdd-guide, e2e-runner (or gstack `/qa` for browser flows) |
 | Review | /code-review | security-review | code-reviewer, security-reviewer |
 | Documentation | /update-docs, /update-codemaps | — | doc-updater |
 | Infrastructure | /plan | docker-patterns, deployment-patterns, database-migrations | code-architect, database-reviewer |
@@ -395,4 +395,4 @@ Recommended: planner agent (or Opus 4.6) for phase scoping, Sonnet 4.6 for phase
 | `skill-stocktake` | Audit which components are installed (use instead of hardcoded catalog) |
 | `documentation-lookup` | Verify current library/API behavior before implementing |
 | `repo-scan` / `codebase-onboarding` | Research phase in optimized prompts — find existing patterns before building new |
-| `strategic-compact` | Long session context management |
+| gstack `/context-save` + `/context-restore` | Long session context management |

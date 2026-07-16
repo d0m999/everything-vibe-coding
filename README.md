@@ -66,7 +66,7 @@ Codex 安装 skills，并为其中原本是 command 的一批额外生成 Codex 
 ./install-codex.sh --apply  # 逐项 symlink skills，并生成/链接 command wrappers
 ```
 
-Codex 的 `$` skill picker 会显示 command 名，例如 `skills/code-review/SKILL.md` 对应 `$code-review`，`skills/ralph-init/SKILL.md` 对应 `$ralph-init`（这批名字见 `scripts/generate-codex-command-skills.sh` 里的 `MIGRATED_COMMAND_SKILLS` 清单——2026-07-14 gray-rollout Phase 2 之前它们读的是 commands/，之后 commands 目录已删除，改读同名 skill）。`~/.codex/prompts` 也会保留一份兼容链接，但它不是主要入口。
+Codex 的 `$` skill picker 会显示 command 名，例如 `skills/python-review/SKILL.md` 对应 `$python-review`，`skills/ralph-init/SKILL.md` 对应 `$ralph-init`（这批名字见 `scripts/generate-codex-command-skills.sh` 里的 `MIGRATED_COMMAND_SKILLS` 清单——2026-07-14 gray-rollout Phase 2 之前它们读的是 commands/，之后 commands 目录已删除，改读同名 skill）。`~/.codex/prompts` 也会保留一份兼容链接，但它不是主要入口。
 
 设计要点：
 

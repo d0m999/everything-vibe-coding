@@ -253,5 +253,5 @@ Audits should produce structured reports following this shape:
 - `agent-introspection-debugging` — Debug agent runtime failures (loops, timeouts, state errors)
 - `agent-eval` — Benchmark agent performance head-to-head
 - `security-review` — Security audit for code and configuration
-- `autonomous-agent-harness` — Set up autonomous agent operations
+- `autonomous-loops` — Set up autonomous agent loop operations
 - `agent-harness-construction` — Build agent harnesses from scratch

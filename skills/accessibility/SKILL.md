@@ -142,6 +142,6 @@ Switch(
 ## Related Skills
 
 - `frontend-patterns`
-- `design-system`
+- gstack `/design-consultation` (design-system creation and audit)
 - `liquid-glass-design`
 - `swiftui-patterns`

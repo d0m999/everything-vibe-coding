@@ -188,8 +188,6 @@ After planning:
 - Use `/code-review` to review completed implementation
 - Open a pull request with `gh pr create` (or gstack `/ship` for the full merge + version bump + PR flow)
 
-> **Need requirements first?** Use `/plan-prd` for a lean PRD at `.claude/prds/{name}.prd.md`.
-
 ## Optional Planner Agent
 
 ECC also provides a `planner` agent for manual installs that include agent files. Use it only when the local runtime already exposes that subagent and the user explicitly asks you to delegate planning.

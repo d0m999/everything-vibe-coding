@@ -128,7 +128,7 @@ To use Plankton hooks in your own project:
 1. Install ECC as your plugin (agents, skills, commands, rules)
 2. Add Plankton hooks for write-time quality enforcement
 3. Use AgentShield for security audits
-4. Use ECC's verification-loop as a final gate before PRs
+4. Use the built-in `/verify` skill as a final gate before PRs
 
 ### Avoiding Hook Conflicts
 
