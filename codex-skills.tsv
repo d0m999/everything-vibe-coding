@@ -1,0 +1,63 @@
+accessibility	implicit	Design, implement, and audit accessible interfaces against WCAG 2.2 AA.
+agent-architecture-audit	implicit	Audit agent and LLM systems for architecture, memory, tool, repair-loop, and rendering failures.
+agent-eval	explicit	Compare coding agents on custom tasks using pass rate, cost, latency, and consistency metrics.
+agent-harness-construction	explicit	Design agent action spaces, tool definitions, and observations for reliable task completion.
+agent-introspection-debugging	implicit	Diagnose agent failures through capture, isolation, contained recovery, and introspection reports.
+agentic-engineering	explicit	Run eval-first agentic engineering with decomposition and cost-aware model routing.
+ai-regression-testing	implicit	Build regression tests that expose AI-generated bugs, blind spots, and same-model review failures.
+api-design	implicit	Design production REST APIs with clear resources, errors, pagination, versioning, and rate limits.
+architecture-decision-records	explicit	Capture architectural decisions, alternatives, context, and rationale as durable ADRs.
+autonomous-loops	explicit	Design autonomous coding loops from sequential pipelines to RFC-driven agent DAGs.
+build-fix	explicit	Detect the build system and fix build or type errors incrementally with minimal safe changes.
+codebase-onboarding	implicit	Map an unfamiliar codebase, its entry points and conventions, and produce an onboarding guide.
+coding-standards	explicit	Apply cross-project conventions for naming, readability, immutability, and maintainability.
+database-migrations	implicit	Plan safe schema and data migrations with rollback and zero-downtime deployment strategies.
+deployment-patterns	explicit	Design CI/CD, container, health-check, rollback, and production-readiness workflows.
+docker-patterns	explicit	Apply Docker and Compose patterns for secure images, networking, volumes, and local development.
+documentation-lookup	implicit	Look up current library and framework documentation instead of relying on training data.
+error-handling	implicit	Design typed errors, retries, circuit breakers, boundaries, and useful user-facing failures.
+fastapi-patterns	explicit	Build production FastAPI services with async, DI, Pydantic, security, tests, and OpenAPI.
+fastapi-review	explicit	Review FastAPI code for architecture, async correctness, schemas, security, performance, and tests.
+foundation-models-on-device	explicit	Build Apple FoundationModels features for guided generation, tools, and snapshot streaming.
+frontend-design-direction	implicit	Set a product-specific visual direction for websites, dashboards, components, and web apps.
+frontend-patterns	implicit	Apply React and Next.js patterns for state, composition, performance, and maintainable UI.
+hexagonal-architecture	explicit	Design and refactor Ports and Adapters systems with testable domain boundaries.
+hookify	explicit	Create hooks that prevent recurring unwanted behaviors found in conversation or instructions.
+hookify-configure	explicit	Enable or disable hookify rules interactively.
+hookify-help	explicit	Explain hookify concepts, commands, and troubleshooting.
+hookify-list	explicit	List configured hookify rules and their status.
+hookify-rules	explicit	Create and configure hookify rules using the supported syntax and patterns.
+liquid-glass-design	explicit	Apply the iOS 26 Liquid Glass design system in SwiftUI, UIKit, and WidgetKit.
+make-interfaces-feel-better	implicit	Polish interface spacing, type, borders, shadows, motion, hit areas, icons, and states.
+mempaw-loop-plan	explicit	Convert a plan-orchestrate document into validated Mempaw loop JSON and a call budget.
+mempaw-loop-start	explicit	Launch a validated Mempaw long-agent loop as a detached background process.
+mempaw-loop-status	explicit	Report compact status for a Mempaw loop without importing its full execution log.
+mle-workflow	explicit	Build reproducible production ML workflows for data, training, evaluation, deployment, and monitoring.
+model-route	explicit	Choose a model tier for the current task based on complexity, risk, and budget.
+plan	explicit	Restate requirements, assess risks, and produce an implementation plan before code changes.
+plan-orchestrate	explicit	Turn a plan into agent chains, invocation blocks, and a parallel execution graph.
+plankton-code-quality	explicit	Enforce write-time formatting, linting, and automated fixes with Plankton hooks.
+postgres-patterns	explicit	Apply PostgreSQL patterns for schema design, indexing, query performance, and security.
+prompt-optimizer	implicit	Analyze and improve prompts for clarity, routing, context efficiency, and reliable execution.
+python-patterns	implicit	Apply Pythonic idioms, typing, PEP 8, and maintainable implementation patterns.
+python-review	explicit	Review Python for correctness, typing, security, style, and Pythonic design.
+python-testing	implicit	Build pytest suites with TDD, fixtures, mocks, parametrization, and meaningful coverage.
+pytorch-patterns	explicit	Build robust PyTorch models, data pipelines, training loops, and reproducible experiments.
+ralph-init	explicit	Design and initialize a Ralph autonomous loop from existing plan documents.
+ralphinho-rfc-pipeline	explicit	Design RFC-driven multi-agent DAG execution with quality gates and merge queues.
+redis-patterns	explicit	Apply Redis patterns for caching, locks, rate limits, pub/sub, and production connections.
+refactor-clean	explicit	Find and remove dead code safely with verification after each change.
+repo-scan	explicit	Audit source assets across a repository and produce actionable module-level verdicts.
+security-scan	explicit	Scan Claude Code configuration for vulnerabilities, unsafe hooks, MCP risks, and injection paths.
+skill-comply	explicit	Measure whether agents follow skills and rules using generated scenarios and behavioral traces.
+skill-create	explicit	Extract recurring patterns from local Git history and generate reusable SKILL.md files.
+skill-scout	implicit	Search local, marketplace, GitHub, and web sources before creating or forking a skill.
+skill-stocktake	explicit	Audit skills and commands for quality using quick or full sequential review modes.
+swift-actor-persistence	explicit	Implement race-free Swift persistence with actors, caching, and file-backed storage.
+swift-concurrency-6-2	implicit	Apply Swift 6.2 approachable concurrency, isolation, and explicit background offloading.
+swift-protocol-di-testing	explicit	Use focused Swift protocols and mocks for testable filesystem, network, and API code.
+swiftui-patterns	implicit	Apply modern SwiftUI architecture, observation, navigation, composition, and performance patterns.
+test-coverage	explicit	Analyze coverage gaps and add meaningful tests toward a defined threshold.
+update-codemaps	explicit	Scan a project and generate token-efficient architecture codemaps.
+update-docs	explicit	Synchronize documentation from source-of-truth scripts, schemas, routes, and exports.
+video-extract	explicit	Extract frames and transcripts from web videos, including browser fallback when downloads fail.

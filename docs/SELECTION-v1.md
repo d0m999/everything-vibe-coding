@@ -278,7 +278,7 @@
 
 ## Post-v1 变更纠偏（持续更新）
 
-> 本节 v1 之后新增，用于给上面冻结的「Keep 名单」历史快照做纠偏。历史数字不改，只在这里追加"发生了什么、现在实际是多少"。
+> 本节 v1 之后新增，用于给上面冻结的「Keep 名单」历史快照做纠偏。历史数字不改，只追加架构变化；当前数量与预算一律引用脚本实时输出。
 
 ### 已发生的变更
 
@@ -287,16 +287,11 @@
 3. **2026-07-14 gray-rollout commands→skills 迁移**（`docs/LOCAL-PATCHES.md`）：
    - Phase 1：24 个顶层 command + `ralph-init` bundle 复制进 `skills/<name>/SKILL.md`（`security-scan` 是与既有 skill 合并，其余 24 个是新增 skill 目录）。
    - Phase 2：确认 skill 侧完整覆盖后，删掉 `commands/` 顶层 24 个 `.md` + `commands/local/ralph-init`（.md + bundle），`commands/` 目录不再存在。`scripts/generate-codex-command-skills.sh` 相应改为对这批名字从 `skills/<name>/SKILL.md` 读取（清单见脚本内 `MIGRATED_COMMAND_SKILLS`），保留 Codex `$name` 触发包装。
+4. **2026-07-31 Codex 单一 adapter 架构**：上一条记录的 `MIGRATED_COMMAND_SKILLS` 与 `evc-command-*` wrapper 是当时的历史决策，现已由 `codex-skills.tsv` 驱动的一 skill 一 adapter 架构取代。Codex 显式调用统一为 `$name`；implicit/explicit policy、数量和上下文预算以 `scripts/check-codex-skills.sh` 输出为准。
 
-### 当前实际计数（2026-07-14 Phase 2 完成后）
+### 当前实际状态
 
-| 维度 | v1 keep（2026-05-16，冻结快照，见上方「Keep 名单」） | 当前实际 |
-|---|---|---|
-| agents | 31 | **29** |
-| skills | 73（+ post-v1 `video-extract` = 74） | **78** |
-| commands | 31 | **0**（目录已不存在，全部并入 skills/） |
-
-上面「Keep 名单」「Drop」两节的具体条目仍按 2026-05-16 快照原样保留，不做逐条更新——它们是决策记录，不是当前状态清单。要查当前真实内容，直接 `ls skills/ agents/` 或跑 `./scripts/doctor.sh`。
+上面「Keep 名单」「Drop」两节的具体条目仍按 2026-05-16 快照原样保留，不做逐条更新——它们是决策记录，不是当前状态清单。当前 canonical skill、Codex adapter、implicit 集和预算请运行 `./scripts/check-codex-skills.sh`；完整安装状态请运行 `./scripts/doctor.sh`。
 
 ## 下一步
 

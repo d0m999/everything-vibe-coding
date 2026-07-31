@@ -1,20 +1,17 @@
 #!/usr/bin/env bash
 # doctor.sh — the one deterministic self-check entrypoint for this repo. No LLM, seconds-fast.
 #
-# Sections 1-5 gate the exit code; section 6 is informational only.
+# Sections 1-6 gate the exit code; section 7 is informational only.
 #   1. Skill/agent structure    — skills/*/SKILL.md and agents/*.md are parseable and self-consistent
 #   2. Path existence           — scripts/*.{js,sh,py} and docs/*.md paths referenced from skill/command
 #                                  bodies actually exist (repo-root or, for skills, the skill's own dir)
 #   3. README path consistency  — README's repo-structure tree + backtick paths point to real files
-#   4. Install-face drift       — delegates to install.sh/install-codex.sh --dry-run --prune (single
-#                                  source of truth for install rules) plus orphaned Codex wrappers
-#   5. Hook registration        — read-only check against settings.json + settings.local.json
-#   6. Context budget           — informational count of repo-owned symlinks; no hardcoded ceiling
+#   4. Codex adapter integrity  — manifest, generated output, policy, canonical paths, catalog budget
+#   5. Install-face drift       — delegates to install.sh/install-codex.sh --dry-run --prune
+#   6. Hook registration        — read-only check against settings.json + settings.local.json
+#   7. Installed footprint      — informational count of repo-owned symlinks
 #
-# Exit codes: 0 = clean, 1 = one or more of sections 1-5 failed.
-#
-# NOTE: .agents/skills/evc-command-*/ is EXCLUDED from section 1's name==dirname check by design —
-# the generator writes `name: <command-name>` while the directory is `evc-command-<command-name>`.
+# Exit codes: 0 = clean, 1 = one or more of sections 1-6 failed.
 
 set -uo pipefail
 
@@ -41,8 +38,8 @@ yaml_field() {
   ' "$file"
 }
 
-# ===== [1/6] Skill / agent structure =====
-echo "==> [1/6] Skill / agent structure"
+# ===== [1/7] Skill / agent structure =====
+echo "==> [1/7] Skill / agent structure"
 sec1_fail=0
 for d in skills/*/; do
   [[ -d "$d" ]] || continue
@@ -88,8 +85,8 @@ else
 fi
 echo
 
-# ===== [2/6] Path existence =====
-echo "==> [2/6] Path existence (scripts/*.{js,sh,py}, docs/*.md referenced in skill/command bodies)"
+# ===== [2/7] Path existence =====
+echo "==> [2/7] Path existence (scripts/*.{js,sh,py}, docs/*.md referenced in skill/command bodies)"
 sec2_fail=0
 # Known generic-template mentions: commands/update-docs.md instructs Claude to generate these
 # files IN WHATEVER TARGET PROJECT /update-docs runs against — they are not claims that this
@@ -137,8 +134,8 @@ else
 fi
 echo
 
-# ===== [3/6] README path consistency =====
-echo "==> [3/6] README path consistency"
+# ===== [3/7] README path consistency =====
+echo "==> [3/7] README path consistency"
 sec3_fail=0
 tree_block="$(awk '
   /^## 仓库结构/ { insec=1 }
@@ -196,26 +193,45 @@ else
 fi
 echo
 
-# ===== [4/6] Install-face drift (delegates to install.sh / install-codex.sh) =====
-echo "==> [4/6] Install-face drift"
+# ===== [4/7] Codex adapter integrity and context budget =====
+echo "==> [4/7] Codex adapter integrity and context budget"
 sec4_fail=0
+codex_check="$("$REPO_ROOT/scripts/check-codex-skills.sh" 2>&1)"
+codex_check_status=$?
+if [[ "$codex_check_status" -ne 0 ]]; then
+  echo "  ✗ scripts/check-codex-skills.sh exited $codex_check_status — output:"
+  echo "$codex_check" | sed 's/^/      /'
+  sec4_fail=1
+else
+  echo "$codex_check"
+fi
+if [[ "$sec4_fail" -eq 0 ]]; then
+  :
+else
+  FAIL=1
+fi
+echo
+
+# ===== [5/7] Install-face drift (delegates to install.sh / install-codex.sh) =====
+echo "==> [5/7] Install-face drift"
+sec5_fail=0
 
 claude_dry="$("$REPO_ROOT/install.sh" --dry-run --prune 2>&1)"
 claude_dry_status=$?
 if [[ "$claude_dry_status" -ne 0 ]]; then
   echo "  ✗ install.sh --dry-run --prune exited $claude_dry_status (precondition failure, not drift) — output:"
   echo "$claude_dry" | sed 's/^/      /'
-  sec4_fail=1
+  sec5_fail=1
 else
   n="$(grep -c '→ LINK' <<< "$claude_dry" || true)"
   if [[ "$n" -gt 0 ]]; then
     echo "  ✗ ~/.claude: $n item(s) in repo but not installed — run ./install.sh --apply"
-    sec4_fail=1
+    sec5_fail=1
   fi
   n="$(grep -c 'PRUNE (would remove)' <<< "$claude_dry" || true)"
   if [[ "$n" -gt 0 ]]; then
     echo "  ✗ ~/.claude: $n dangling symlink(s) into this repo — run ./install.sh --apply --prune"
-    sec4_fail=1
+    sec5_fail=1
   fi
 fi
 
@@ -224,55 +240,32 @@ codex_dry_status=$?
 if [[ "$codex_dry_status" -ne 0 ]]; then
   echo "  ✗ install-codex.sh --dry-run --prune exited $codex_dry_status (precondition failure, not drift) — output:"
   echo "$codex_dry" | sed 's/^/      /'
-  sec4_fail=1
+  sec5_fail=1
 else
-  n="$(grep -cE '^  LINK ' <<< "$codex_dry" || true)"
-  if [[ "$n" -gt 0 ]]; then
-    echo "  ✗ ~/.codex: $n item(s) in repo but not installed — run ./install-codex.sh --apply"
-    sec4_fail=1
-  fi
-  n="$(grep -c 'PRUNE (would remove)' <<< "$codex_dry" || true)"
-  if [[ "$n" -gt 0 ]]; then
-    echo "  ✗ ~/.codex: $n dangling symlink(s) into this repo — run ./install-codex.sh --apply --prune"
-    sec4_fail=1
-  fi
+  for action in LINK RELINK PRUNE CONFLICT; do
+    n="$(grep -cE "^  $action[[:space:]]" <<< "$codex_dry" || true)"
+    [[ "$n" -gt 0 ]] || continue
+    case "$action" in
+      LINK) message="$n adapter(s) not installed" ;;
+      RELINK) message="$n repo link(s) need migration" ;;
+      PRUNE) message="$n retired repo link(s) need pruning" ;;
+      CONFLICT) message="$n preserved conflict(s) block complete installation" ;;
+    esac
+    echo "  ✗ ~/.codex: $message — run ./install-codex.sh --apply --prune and resolve conflicts explicitly"
+    sec5_fail=1
+  done
 fi
 
-# Live-but-wrong registration: a wrapper dir exists but nothing backs it — either a command file
-# (commands/<name>.md, commands/local/<name>.md) or, for gray-rollout-migrated names, the skill it
-# now reads from (skills/<name>/SKILL.md — see MIGRATED_COMMAND_SKILLS in
-# generate-codex-command-skills.sh). generate-codex-command-skills.sh's rebuild just hasn't been
-# rerun since the backing source was removed.
-for d in .agents/skills/evc-command-*/; do
-  [[ -d "$d" ]] || continue
-  cname="$(basename "$d" | sed 's/^evc-command-//')"
-  if [[ ! -f "commands/$cname.md" && ! -f "commands/local/$cname.md" && ! -f "skills/$cname/SKILL.md" ]]; then
-    echo "  ✗ .agents/skills/evc-command-$cname has no matching commands/$cname.md or skills/$cname/SKILL.md — rerun scripts/generate-codex-command-skills.sh"
-    sec4_fail=1
-  fi
-done
-
-# Reverse case: a command file exists but has no matching Codex wrapper — a command was added
-# (or moved into commands/local/) but generate-codex-command-skills.sh was never rerun.
-for f in commands/*.md commands/local/*.md; do
-  [[ -e "$f" ]] || continue
-  cname="$(basename "$f" .md)"
-  if [[ ! -d ".agents/skills/evc-command-$cname" ]]; then
-    echo "  ✗ $f has no matching .agents/skills/evc-command-$cname — rerun scripts/generate-codex-command-skills.sh"
-    sec4_fail=1
-  fi
-done
-
-if [[ "$sec4_fail" -eq 0 ]]; then
+if [[ "$sec5_fail" -eq 0 ]]; then
   echo "    clean"
 else
   FAIL=1
 fi
 echo
 
-# ===== [5/6] Hook registration (read-only) =====
-echo "==> [5/6] Hook registration (read-only; never writes settings.json)"
-sec5_fail=0
+# ===== [6/7] Hook registration (read-only) =====
+echo "==> [6/7] Hook registration (read-only; never writes settings.json)"
+sec6_fail=0
 settings_blob=""
 for sf in "$HOME/.claude/settings.json" "$HOME/.claude/settings.local.json"; do
   [[ -f "$sf" ]] && settings_blob+="$(cat "$sf")"$'\n'
@@ -284,18 +277,18 @@ for f in hooks/*.js; do
     echo "  ⊙ $name registered"
   else
     echo "  ✗ $name not registered in settings.json or settings.local.json"
-    sec5_fail=1
+    sec6_fail=1
   fi
 done
-if [[ "$sec5_fail" -eq 0 ]]; then
+if [[ "$sec6_fail" -eq 0 ]]; then
   echo "    clean"
 else
   FAIL=1
 fi
 echo
 
-# ===== [6/6] Context budget (informational only — not counted in exit status) =====
-echo "==> [6/6] Context budget (informational; no hardcoded ceiling)"
+# ===== [7/7] Installed footprint (informational only — not counted in exit status) =====
+echo "==> [7/7] Installed footprint (informational)"
 count_owned_symlinks() {
   local dir="$1" n=0
   [[ -d "$dir" ]] || { echo 0; return; }

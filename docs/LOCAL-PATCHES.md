@@ -6,6 +6,18 @@
 >
 > 用途：将来从上游同步新版本时识别需要 re-apply 的修改点。
 
+## 2026-07-31 — Codex 单一 adapter 与上下文预算门禁
+
+`skills/` 继续作为 Claude、vendoring 和正文的唯一 canonical 来源；Codex 改为从 `codex-skills.tsv` 生成同名 adapter，并只安装该生成层。manifest 完整性、policy、description 和模型可见 catalog 预算均由脚本实时校验，不在文档中维护当前计数。
+
+| 日期 | 文件 | 修改 | 原因 |
+|---|---|---|---|
+| 2026-07-31 | `codex-skills.tsv`、`scripts/generate-codex-skills.sh`、`scripts/generate-codex-command-skills.sh` | 新增全量 Codex manifest 与一 skill 一 adapter generator；旧脚本名保留为兼容入口 | 消除 native skill 与 `evc-command-*` wrapper 的双重发现面，并用 manifest 控制 implicit/explicit policy |
+| 2026-07-31 | `install-codex.sh` | 只链接生成 adapter；支持旧仓库链接 `RELINK`、退出 manifest 链接 `PRUNE`，默认保留非仓库冲突 | 安全迁移现有安装，同时不覆盖 gstack/plugin/其他仓库内容 |
+| 2026-07-31 | `scripts/check-codex-skills.sh`、`scripts/tests/test-codex-skills.sh`、`scripts/doctor.sh` | 新增 manifest、生成一致性、policy、canonical 回源、预算和安装迁移回归门禁 | 让 adapter 漂移与上下文预算超限 fail closed，数量只从脚本实时计算 |
+
+> 2026-07-15 的 `MIGRATED_COMMAND_SKILLS` / `evc-command-*` wrapper 方案和 2026-06-16 的首次 wrapper 决策继续保留在下文作为历史记录；两者均已被本节的单一 adapter 架构取代。Codex 只保证 `$name` 显式调用，不再承诺普通文本 `/name` 路由。
+
 ## 2026-07-16 — 三来源 skill 冗余收敛（attic 15 个 + 引用清理）
 
 与 gstack 套件、Matt Pocock skills（`~/.agents/skills/`）、Claude Code 内建 skill 逐组对比后，用户逐项决策将 15 个冗余 skill 归档到 `attic/skills/`：`code-review`、`security-review`（均与内建同名冲突且功能被内建覆盖）、`canary-watch`（→ gstack `/canary`）、`safety-guard`（→ gstack careful/freeze/guard/unfreeze）、`learn-eval`（→ gstack `/learn`）、`plan-prd`（`/plan` 的薄包装）、`strategic-compact`（→ gstack context-save/restore + Matt handoff）、`design-system`（→ gstack `/design-consultation`）、`eval-harness`（定位与 `agent-eval`/gstack `benchmark-models` 重叠）、`verification-loop`（→ 内建 `/verify`）、`loop-start`、`loop-status`（→ mempaw-loop 三件套 + 内建 `/loop`）、`autonomous-agent-harness`、`continuous-agent-loop`、`agentic-os`（三者与 `autonomous-loops` 内容重叠，收敛为后者单一 canonical——`continuous-agent-loop` 虽是上游 v1.8 改名目标但只有 46 行存根，内容主体在 `autonomous-loops`）。

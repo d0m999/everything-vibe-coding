@@ -40,10 +40,13 @@ ecc 太全 — 500+ skills、几十个 agent、覆盖几十种技术栈。对我
 .
 ├── README.md
 ├── install.sh                # 逐项 symlink 到 ~/.claude/
+├── install-codex.sh          # 生成并 reconcile Codex adapter 链接
+├── codex-skills.tsv          # Codex adapter mode 与短 description 的唯一 manifest
 ├── skills/                   # 启用的 skills（含本地原创、含 gray-rollout 迁入的 command 系；一层目录参与 install）
 ├── agents/                   # 启用的 agents
 ├── hooks/                    # 启用的 hooks
 ├── attic/                    # 下架但留底（不参与 install）
+├── scripts/                  # 生成、预算/一致性检查、doctor 与 vendoring 工具
 └── docs/
     ├── SELECTION-v1.md       # v1 白名单及评分（问卷产出）
     ├── UPSTREAM.md           # 上游变更评估日志
@@ -59,20 +62,23 @@ ecc 太全 — 500+ skills、几十个 agent、覆盖几十种技术栈。对我
 ./install.sh --backup     # 安装前把 ~/.claude/ 备份到 ~/.claude.bak-<ts>/
 ```
 
-Codex 安装 skills，并为其中原本是 command 的一批额外生成 Codex skill wrappers：
+Codex 统一安装由 manifest 生成的薄 adapter：
 
 ```bash
-./install-codex.sh          # dry-run，预览写入 ~/.codex/skills/ 的内容
-./install-codex.sh --apply  # 逐项 symlink skills，并生成/链接 command wrappers
+./scripts/generate-codex-command-skills.sh  # 兼容入口；生成全部 adapter
+./install-codex.sh                         # dry-run，预览 LINK/RELINK/PRUNE/CONFLICT
+./install-codex.sh --apply --prune         # 安全迁移旧链接并安装 adapter
 ```
 
-Codex 的 `$` skill picker 会显示 command 名，例如 `skills/python-review/SKILL.md` 对应 `$python-review`，`skills/ralph-init/SKILL.md` 对应 `$ralph-init`（这批名字见 `scripts/generate-codex-command-skills.sh` 里的 `MIGRATED_COMMAND_SKILLS` 清单——2026-07-14 gray-rollout Phase 2 之前它们读的是 commands/，之后 commands 目录已删除，改读同名 skill）。`~/.codex/prompts` 也会保留一份兼容链接，但它不是主要入口。
+Codex 唯一保证的显式调用形式是 `$name`，例如 `$python-review`、`$ralph-init`。`codex-skills.tsv` 中 `implicit` 项可以按语义自动触发；`explicit` 项仍会出现在 picker 中，但不会进入初始模型可见目录。普通文本 `/name` 不属于 Codex 兼容契约；Claude Code 侧原有 `/name` 行为不变。
+
+每个 adapter 被调用后都会完整读取 `skills/<name>/SKILL.md`，并从 canonical skill 目录解析正文里的相对引用。`.agents/skills/` 是 ignored generated output；`skills/` 始终是 Claude、vendoring 和正文维护的唯一来源。数量、description 限制和上下文预算由 `./scripts/check-codex-skills.sh` 与 `./scripts/doctor.sh` 实时计算并门禁。
 
 设计要点：
 
 - **逐项 symlink**（不是整个目录 symlink）。这样 `~/.claude/skills/` 下既可以放本 repo 管理的 skill，也容得下临时、未纳入 repo 的内容。
-- **Codex 也逐项 symlink** 到 `$CODEX_HOME/skills`（默认 `~/.codex/skills`），并为 `MIGRATED_COMMAND_SKILLS` 清单里的 command 系 skill 生成 `.agents/skills/evc-command-*` wrapper 后链接进去，避免覆盖 Codex 自带的 `.system` skills 和其他本地安装项。
-- **同名冲突给提示、不静默覆盖**。已存在的目标会列出来，需要 `--force` 才覆盖。
+- **Codex 只链接生成的 adapter** 到 `$CODEX_HOME/skills`（默认 `~/.codex/skills`）。同名旧 native 仓库链接会原位 `RELINK`；退出 manifest 的仓库链接由 `--prune` 清理。
+- **非仓库内容默认保留**。非 symlink、外部 symlink 和其他仓库内容只报告 `CONFLICT`；只有显式 `--force` 才允许覆盖。
 - **`attic/` 不参与 install**。
 
 ## v1 筛选方法
@@ -124,7 +130,7 @@ v1 白名单不是一次性凭印象列出来，而是分阶段问答生成：
 
 ### 我自己写的（原创）
 
-放进参与安装的对应目录。Claude/Codex skills 一律放 `skills/<name>/`（一层目录，确保 `install.sh` / `install-codex.sh` 能发现）；如果这项内容原本是 command 形态、还需要 Codex 端显式的 `/name` 触发包装，把名字加进 `scripts/generate-codex-command-skills.sh` 的 `MIGRATED_COMMAND_SKILLS` 清单。原创内容不需要 SOURCES 记录，但要在 `docs/SELECTION-v1.md` / `docs/VENDORING-MANIFEST.md` 记录为本地原创；如果存在 `CHANGELOG.md`，也在顶部加一行。
+放进参与安装的对应目录。Claude/Codex skills 一律放 `skills/<name>/`，同时按名称排序在 `codex-skills.tsv` 增加对应 adapter policy 与 Codex 专用短 description，然后运行 generator 和 checker。原创内容不需要 SOURCES 记录，但要在 `docs/SELECTION-v1.md` / `docs/VENDORING-MANIFEST.md` 记录为本地原创；如果存在 `CHANGELOG.md`，也在顶部加一行。
 
 ### 本地补丁（对 vendored 内容的修改）
 
@@ -161,10 +167,10 @@ YYYY-MM-DD  add|drop|patch|sync  <path>  <一句话说明>
 
 ## 当前状态
 
-- [x] v1 问卷完成 → `docs/SELECTION-v1.md`（v1 keep **135 项** / drop ~360+ 项，agents 31 / skills 73 / commands 31 = 29 from ecc + 1 fork + 1 原创——历史快照，已被下面两行取代）
+- [x] v1 问卷完成 → `docs/SELECTION-v1.md`（冻结的历史选型快照；当前真实数量以脚本输出为准）
 - [x] post-v1 本地原创 skill `video-extract` 纳入 `skills/video-extract/`（用于视频内容抽取、字幕/转写、YouTube 403/SABR/PO-token 浏览器兜底）
-- [x] gray-rollout commands→skills 迁移完成：Phase 1（2026-07-14，24 legacy commands + ralph-init bundle 复制进 skills/，见 `docs/LOCAL-PATCHES.md`）→ Phase 2（同日，删掉 commands 顶层 24 个 .md + commands/local/ralph-init 冗余壳；commands 目录不再存在；`scripts/generate-codex-command-skills.sh` 改为对 `MIGRATED_COMMAND_SKILLS` 清单里的 25 个名字从 skills/ 读取）
-- [x] 当前实际计数（2026-07-14，Phase 2 完成后）：agents **29** / skills **78** / commands **0** — 早前「v1 keep 135 项」的三项计数已经过期，历史数字保留在 `docs/SELECTION-v1.md`，不再更新
+- [x] gray-rollout commands→skills 迁移完成：Phase 1 将 legacy command 正文复制进 skills，Phase 2 删除冗余 command 壳；该阶段的 `MIGRATED_COMMAND_SKILLS` wrapper 决策保留在历史文档中。
+- [x] Codex 单一 adapter 架构完成：`codex-skills.tsv` 覆盖所有 canonical skills，旧 native/`evc-command-*` 双重安装面已由统一 `$name` adapter 取代；当前数量与预算只引用 checker/doctor 的实时输出。
 - [x] vendoring manifest review 完成 → `docs/VENDORING-MANIFEST.md`（2026-05-16 用户确认 6/6 项）
 - [x] `scripts/vendor-from-ecc.sh` 完成
 - [x] `scripts/check-references.sh` 完成（识别 74 个 drop name 提及，按 count≥2+1:1替代品 筛选 fix 了 6 处 `architect`/`e2e-runner`，其余在 `docs/LOCAL-PATCHES.md` 留底）

@@ -1,6 +1,6 @@
 *.bak
 .claude/settings.local.json
-.agents/skills/evc-command-*/
+.agents/skills/
 plan/
 .work/
 
